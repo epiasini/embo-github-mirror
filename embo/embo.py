@@ -3,17 +3,18 @@ import numpy as np
 from numba import jit
 from scipy.stats import entropy
 
+from .utils import p_dist, p_joint, p_cond, mi_x1x2_c
 
-@jit
-def empirical_bottleneck(x,y,maxbeta=5,iterations=100):
+
+def empirical_bottleneck(x,y,numuniquex=0,numuniquey=0,maxbeta=5,iterations=100):
     """ Compute an IB curve for two empirical sequences x and y"""
     
     # Marginal, joint and conditional distributions required to calculate the IB
-    px = p_dist2(x)
-    py = p_dist2(y)
-    pxy_j = p_joint2(x,y)
+    px = p_dist(x,numuniquex)
+    py = p_dist(y,numuniquey)
+    pxy_j = p_joint(x,y)
     pxy_c = p_cond(px,py,pxy_j)
-    pyx_j = p_joint2(y,x)
+    pyx_j = p_joint(y,x)
     pyx_c = p_cond(py,px,pyx_j)
     # Mutual information
     mi = mi_x1x2_c(px,py,pxy_c)
@@ -49,7 +50,7 @@ def IB(px,py,pyx_c,maxbeta=5,iterations=100):
         ifs[bi] = mi_x1x2_c(py,pm,pym_c)
     return ips,ifs,bs
 
-@jit
+#@jit
 def p_mx_c(pm,px,py,pyx_c,pym_c,beta):
     """Update conditional distribution of bottleneck random variable given x.
 
@@ -112,3 +113,5 @@ def p_m(pmx_c,px):
         for xi in range(len(px)):
             pm[mi] += pmx_c[mi,xi]*px[xi]
     return pm
+
+

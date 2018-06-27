@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 
 @jit
-def p_dist(x,numunique=None,window=1):
+def p_dist(x,numunique=0,window=1):
     """
     Take a sequence and return a marginal distribution
 
@@ -12,18 +12,18 @@ def p_dist(x,numunique=None,window=1):
 
     return an empirical probability distribution of length numunique**window
     """
-    if numunique==None:
-        unique = np.unique(x).size
+    if numunique==0:
+        numunique = np.unique(x).size
     numxwords = numunique**window #number of total possible words given the number of unique symbols and the window size
     px = np.zeros(numunique**window)
     aux_x_base = numunique**np.arange(window)[::-1]
-    for i in range(len(x)-window+1):
-        px[x[i:i+window] @ aux_x_base] += 1
+    for i in range(len(x)-window):
+        px[(x[i:i+window] @ aux_x_base)] += 1
     return px/px.sum()
 
 
 @jit
-def p_joint(x1,x2,numuniquex1=None,numuniquex2=None,windowx1=1,windowx2=1):
+def p_joint(x1,x2,numuniquex1=0,numuniquex2=0,windowx1=1,windowx2=1):
     """
     Compute the joint distribution between two data series
     
@@ -36,9 +36,9 @@ def p_joint(x1,x2,numuniquex1=None,numuniquex2=None,windowx1=1,windowx2=1):
     
     return a matrix of the joint probability p(x1,x2)
     """
-    if numuniquex1==None:
+    if numuniquex1==0:
         numuniquex1 = np.unique(x1).size
-    if numuniquex2==None:
+    if numuniquex2==0:
         numuniquex2 = np.unique(x2).size
     numwordsx1 = numuniquex1**windowx1
     numwordsx2 = numuniquex2**windowx2
@@ -81,5 +81,5 @@ def mi_x1x2_c(px1,px2,px1x2_c):
     for x2i in range(len(px2)):
         for x1i in range(len(px1)):
             if px1x2_c[x1i,x2i] > 0 and px1[x1i] > 0:
-                mi += px2[x2i]*px1x2_c[x1i,x2i]*log2(px1x2_c[x1i,x2i]/px1[x1i])
+                mi += px2[x2i]*px1x2_c[x1i,x2i]*np.log2(px1x2_c[x1i,x2i]/px1[x1i])
     return mi    
