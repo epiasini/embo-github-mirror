@@ -42,7 +42,5 @@ setup (name="embo",
        ],
        packages=["embo",
                  "embo.test"],
-       # examples must be included as package_data
-       package_data={"embo": ["examples/*.npy"]},
        test_suite="embo.test")
 

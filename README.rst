@@ -24,7 +24,7 @@ Testing
 -------
 From within the root folder of the package (i.e. this folder), run
 .. codeblock:: bash
-	       python3 setup.py test
+   python3 setup.py test
 
 This should run through all tests specified in `embo/test`. These
 should generate a fair number of `numba` warnings, but they should run
@@ -42,7 +42,7 @@ You probably want to do something like this:
    y = np.array([1,0,1,0,1,0,1,0,1,0]*300)
 
    # IB bound for different values of beta
-   i_p,i_f,beta,mi = empirical_bottleneck(x,y,2,2)
+   i_p,i_f,beta,mi = empirical_bottleneck(x,y)
 
    
    

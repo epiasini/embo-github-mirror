@@ -14,6 +14,6 @@ class TestSimpleSequences(unittest.TestCase):
         y = np.array([1,0,1,0,1,0,1,0,1,0]*300)
 
         # IB bound for different values of beta
-        i_p,i_f,beta,mi = empirical_bottleneck(x,y,2,2)
+        i_p,i_f,beta,mi = empirical_bottleneck(x,y)
 
         np.testing.assert_allclose(i_f[-1],mi,rtol=1e-3)
