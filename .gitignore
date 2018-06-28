@@ -1,2 +1,4 @@
 *.pyc
 embo.egg-info/
+build
+dist

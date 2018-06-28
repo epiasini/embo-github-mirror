@@ -8,17 +8,24 @@ the analysis of concrete, finite-size data sets.
 Installation
 ------------
 
-For the moment, just add this folder to your `PYTHONPATH` by doing
-something like
+For the moment, just clone this repo by doing something like
+
+.. codeblock:: bash
+   cd /home/username/src
+   git clone git@gitlab.com:epiasini/embo.git
+   
+and add its location to your `PYTHONPATH`:
+
 ::
    import sys
-   sys.path.append("../src/embo") 
-   from embo import embo
+   sys.path.append("/home/username/src/embo") 
 
-You should even be able to install via `python3 setup.py install`, but
-I'd discourage it for the moment while this library is still expected
-to change often. Later on, it will be very easy to upload this to the
-PyPI and make it accessible via `pip`.
+Alternatively, you can simply install via `python setup.py install
+--user`, but I'd discourage it for the moment if you feel like you
+will be making changes to the library as you use it. From a technical
+standpoint, this package is essentially ready for upload to the Python
+Package Index and distribution via `pip`, so this will be easy to do
+when we feel like sharing it more publicly.
 
 Testing
 -------
@@ -26,9 +33,9 @@ From within the root folder of the package (i.e. this folder), run
 .. codeblock:: bash
    python3 setup.py test
 
-This should run through all tests specified in `embo/test`. These
-should generate a fair number of `numba` warnings, but they should run
-successfully (look for the summary at the end of the output).
+This should run through all tests specified in `embo/test`. These may
+generate some `numba` warnings, but they should run successfully (look
+for the summary at the end of the output).
 
 Usage
 -----
