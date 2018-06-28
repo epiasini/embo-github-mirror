@@ -1,9 +1,10 @@
-test:2.7
+test:2.7:
   script:
   - apt-get update -qy
   - apt-get install -y python-numpy python-scipy python-numba
   - python setup.py test
-test:3.x
+
+test:3.x:
   script:
   - apt-get update -qy
   - apt-get install -y python3-numpy python3-scipy python3-numba
