@@ -16,7 +16,7 @@ For the moment, just clone this repo by doing something like
    
 and add its location to your `PYTHONPATH`:
 
-::
+.. codeblock:: python
    import sys
    sys.path.append("/home/username/src/embo") 
 
