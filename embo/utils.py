@@ -37,14 +37,6 @@ def mi_x1x2_c(px1,px2,px1x2_c):
     """Compute the MI between two probability distributions x1 and x2
     using their respective marginals and conditional distribution
     """
-
-    # mi = 0.
-    # for x2i in range(len(px2)):
-    #     for x1i in range(len(px1)):
-    #         if px1x2_c[x1i,x2i] > 0 and px1[x1i] > 0:
-    #             mi += px2[x2i]*px1x2_c[x1i,x2i]*np.log2(px1x2_c[x1i,x2i]/px1[x1i])
-    # return mi    
-
     marginal_entropy = entropy(px1, base=2)
     conditional_entropy = 0.
     for x2i in range(px2.size):
