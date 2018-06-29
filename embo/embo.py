@@ -44,15 +44,14 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100):
         pym_c /= pym_c.sum(axis=0)
         # iterate the BA algorithm
         for i in range(iterations):
-            if i>0:
-                pmx_c_old = pmx_c.copy()
-                pm_old = pm.copy()
-                pym_c_old = pym_c.copy()
             pmx_c = p_mx_c(pm,px,py,pyx_c,pym_c,bs[bi])
             pm = p_m(pmx_c,px)
             pym_c = p_ym_c(pm,px,py,pyx_c,pmx_c)
-            if i>0 and np.allclose(pmx_c,pmx_c_old) and np.allclose(pm, pm_old) and np.allclose(pym_c,pym_c_old):
+            if i>0 and np.allclose(pmx_c,pmx_c_old):
+                # if the x->m mapping is not updating any more, we're at convergence and we can stop
                 break
+            pmx_c_old = pmx_c
+
         ips[bi] = mi_x1x2_c(pm,px,pmx_c)
         ifs[bi] = mi_x1x2_c(py,pm,pym_c)
     return ips,ifs,bs
