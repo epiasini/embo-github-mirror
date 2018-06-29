@@ -2,3 +2,4 @@
 embo.egg-info/
 build
 dist
+embo/examples/.ipynb_checkpoints
