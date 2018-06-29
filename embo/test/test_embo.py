@@ -1,19 +1,29 @@
 import unittest
 import numpy as np
+from scipy.stats import entropy
 
 from embo.embo import empirical_bottleneck
+from embo.utils import p_dist
 
 
-class TestSimpleSequences(unittest.TestCase):
+class TestBinarySequence(unittest.TestCase):
     def setUp(self):
-        pass
-
-    def test_binary_sequence(self):
         # Fake data sequence
-        x = np.array([0,0,0,1,0,1,0,1,0,1]*300)
-        y = np.array([1,0,1,0,1,0,1,0,1,0]*300)
+        self.x = np.array([0,0,0,1,0,1,0,1,0,1]*300)
+        self.y = np.array([1,0,1,0,1,0,1,0,1,0]*300)
 
-        # IB bound for different values of beta
-        i_p,i_f,beta,mi = empirical_bottleneck(x,y)
+    def test_origin(self):
+        """Check that the IB bound starts at (0,0) for small beta"""
+        i_p,i_f,beta,mi = empirical_bottleneck(self.x,self.y)
+        np.testing.assert_allclose((i_p[0],i_f[0]),(0,0),rtol=1e-7,atol=1e-10)
 
-        np.testing.assert_allclose(i_f[-1],mi,rtol=1e-3)
+    def test_asymptote(self):
+        """Check that the IB bound saturates at (H(x),MI(X:Y)) for large beta.
+
+        Note that both H(X) and MI(X,Y) are computed using the
+        functions defined within EMBO.
+
+        """
+        i_p,i_f,beta,mi = empirical_bottleneck(self.x,self.y,maxbeta=10)
+        hx = entropy(p_dist(self.x), base=2)
+        np.testing.assert_allclose((i_p[-1],i_f[-1]),(hx,mi),rtol=1e-5)
