@@ -2,27 +2,7 @@ from __future__ import division
 
 import numpy as np
 from numba import jit
-
-@jit
-def p_dist(x,numunique=0,window=1):
-    """
-    Take a sequence and return a marginal distribution
-
-    x = array of observations
-    numunique = number of unique values x can take
-    window = moving window size of the symbols to take into account
-
-    return an empirical probability distribution of length numunique**window
-    """
-    if numunique==0:
-        numunique = np.unique(x).size
-    numxwords = numunique**window #number of total possible words given the number of unique symbols and the window size
-    px = np.zeros(numunique**window)
-    aux_x_base = numunique**np.arange(window)[::-1]
-    for i in range(len(x)-window):
-        px[np.inner(x[i:i+window], aux_x_base)] += 1
-    return px/px.sum()
-
+from scipy.stats import entropy
 
 @jit
 def p_joint(x1,x2,numuniquex1=0,numuniquex2=0,windowx1=1,windowx2=1):
@@ -53,35 +33,21 @@ def p_joint(x1,x2,numuniquex1=0,numuniquex2=0,windowx1=1,windowx2=1):
         px1x2[x1i,x2i] += 1
     return px1x2/px1x2.sum()
 
-@jit
-def p_cond(px1,px2,px1x2_j):
-    """Compute conditional distribution p(x1|x2)
-
-    px2 = probability distribution for the item on which things are conditioned
-
-    px1x2 = joint probability distribution p(x1,x2)
-
-    return a matrix with the same dimensions as px1x2 with
-    probabilities of x1 conditioned on x2
-
-    """
-    px1x2_c = np.zeros(np.shape(px1x2_j))
-    for x1i in range(len(px1)):
-        for x2i in range(len(px2)):
-            if px2[x2i] > 0:
-                px1x2_c[x1i,x2i] = px1x2_j[x1i,x2i]/px2[x2i]
-    return px1x2_c/px1x2_c.sum(axis=0) # make sure it's normalized
-
-
-@jit
 def mi_x1x2_c(px1,px2,px1x2_c):
     """Compute the MI between two probability distributions x1 and x2
     using their respective marginals and conditional distribution
     """
 
-    mi = 0.
-    for x2i in range(len(px2)):
-        for x1i in range(len(px1)):
-            if px1x2_c[x1i,x2i] > 0 and px1[x1i] > 0:
-                mi += px2[x2i]*px1x2_c[x1i,x2i]*np.log2(px1x2_c[x1i,x2i]/px1[x1i])
-    return mi    
+    # mi = 0.
+    # for x2i in range(len(px2)):
+    #     for x1i in range(len(px1)):
+    #         if px1x2_c[x1i,x2i] > 0 and px1[x1i] > 0:
+    #             mi += px2[x2i]*px1x2_c[x1i,x2i]*np.log2(px1x2_c[x1i,x2i]/px1[x1i])
+    # return mi    
+
+    marginal_entropy = entropy(px1, base=2)
+    conditional_entropy = 0.
+    for x2i in range(px2.size):
+        conditional_entropy += px2[x2i] * entropy(px1x2_c[:,x2i], base=2)
+    return marginal_entropy - conditional_entropy
+

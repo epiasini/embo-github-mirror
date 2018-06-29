@@ -1,10 +1,7 @@
 import unittest
 import numpy as np
-from scipy.stats import entropy
 
 from embo.embo import empirical_bottleneck
-from embo.utils import p_dist
-
 
 class TestBinarySequence(unittest.TestCase):
     def setUp(self):
@@ -14,7 +11,7 @@ class TestBinarySequence(unittest.TestCase):
 
     def test_origin(self):
         """Check that the IB bound starts at (0,0) for small beta"""
-        i_p,i_f,beta,mi = empirical_bottleneck(self.x,self.y)
+        i_p,i_f,beta,mi,_,_ = empirical_bottleneck(self.x,self.y)
         np.testing.assert_allclose((i_p[0],i_f[0]),(0,0),rtol=1e-7,atol=1e-10)
 
     def test_asymptote(self):
@@ -24,6 +21,5 @@ class TestBinarySequence(unittest.TestCase):
         functions defined within EMBO.
 
         """
-        i_p,i_f,beta,mi = empirical_bottleneck(self.x,self.y,maxbeta=10)
-        hx = entropy(p_dist(self.x), base=2)
+        i_p,i_f,beta,mi,hx,hy = empirical_bottleneck(self.x,self.y,maxbeta=10)
         np.testing.assert_allclose((i_p[-1],i_f[-1]),(hx,mi),rtol=1e-5)
