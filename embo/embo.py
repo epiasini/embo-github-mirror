@@ -3,6 +3,7 @@ import numpy as np
 
 from numba import jit
 from scipy.stats import entropy
+from scipy.spatial import ConvexHull
 
 from .utils import p_joint, mi_x1x2_c
 
@@ -22,15 +23,16 @@ def empirical_bottleneck(x,y,numuniquex=0,numuniquey=0,**kw):
     return i_p,i_f,beta,mi,entropy(px,base=2),entropy(py,base=2)
 
 def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100):
-    """
-    Compute an Information Bottleneck curve
+    """Compute an Information Bottleneck curve
 
     px: marginal probability distribution for the past
     py: marginal distribution for the future
     maxbeta: the maximum value of beta to use to compute the curve
     iterations: number of iterations to use to for the curve to converge for each value of beta
     
-    return vectors of ipast and ifuture (ips and ifs respectively) for different values of beta (bs)
+    return vectors of ipast and ifuture (ips and ifs respectively) for
+    different values of beta (bs)
+
     """
     pm_size = px.size
     bs = np.linspace(0.01,maxbeta,numbeta) #value of beta
@@ -55,6 +57,53 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100):
         ips[bi] = mi_x1x2_c(pm,px,pmx_c)
         ifs[bi] = mi_x1x2_c(py,pm,pym_c)
     return ips,ifs,bs
+
+def compute_upper_bound(IX, IY):
+    """Extract the upper part of the convex hull of an IB sequence.
+
+    This is a post-processing step that is needed after computing an
+    IB sequence (defined as a sequence of (IX, IY) pairs),
+    to remove the random fluctuations in the result induced by the AB
+    algorithm getting stuck in local minima.
+
+    Parameters
+    ----------
+    IX : array
+        I(X) values
+    IY : array 
+        I(Y) values
+
+    Returns
+    -------
+    array (n x 2)
+        (I(X), I(Y)) coordinates of the upper part of the convex hull
+        defined by the input points.
+
+    """
+    points = np.vstack((IX,IY)).T
+    hull = ConvexHull(points)
+    # origin point of the IB curve - defined as that with lowest I(Y).
+    origin = vertices[:,1].argmin()
+    # "turnaround" point of the convex hull, or rightmost point of the
+    # IB curve - defined as that with highest I(Y).
+    turnaround = vertices[:,1].argmax()
+
+    # the vertices of the convex hull are always specified in
+    # counterclockwise order. To select the upper part, we need to
+    # distinguish between two cases, depending on whether the first
+    # vertex in the vertices list lies on the upper part or on the
+    # lower part of the hull. Finally, we also have to flip the order
+    # in which the vertices are taken, such that our result will be a
+    # sequence of (I(X), I(Y)) pairs where both coordinates are
+    # monotonically increasing.
+    if origin > turnaround:
+        # the first vertex lies on the lower part of the hull
+        upper_part = np.flip(points[hull.vertices[turnaround:(origin+1)],:], axis=0)
+    else:
+        # the first vertex lies on the upper part of the hull
+        upper_part = np.flip(np.vstack((points[hull.vertices[turnaround:],:], points[hull.vertices[:(origin+1)],:])), axis=0)
+
+    return upper_part
 
 @jit
 def p_mx_c(pm,px,py,pyx_c,pym_c,beta):
