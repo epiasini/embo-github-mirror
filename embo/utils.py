@@ -1,10 +1,8 @@
 from __future__ import division
 
 import numpy as np
-from numba import jit
 from scipy.stats import entropy
 
-@jit
 def p_joint(x1,x2,numuniquex1=0,numuniquex2=0,windowx1=1,windowx2=1):
     """
     Compute the joint distribution between two data series

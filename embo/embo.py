@@ -2,7 +2,6 @@ from __future__ import division
 import numpy as np
 
 from functools import reduce
-from numba import jit
 from scipy.stats import entropy
 from scipy.spatial import ConvexHull
 
@@ -106,7 +105,6 @@ def compute_upper_bound(IX, IY, betas=None):
         return upper_bound, betas[selected_idxs]
 
 
-@jit
 def p_mx_c(pm,px,py,pyx_c,pym_c,beta):
     """Update conditional distribution of bottleneck random variable given x.
 
@@ -124,7 +122,6 @@ def p_mx_c(pm,px,py,pyx_c,pym_c,beta):
     return pmx_c/pmx_c.sum(axis=0) #Normalize 
 
 
-@jit
 def p_ym_c(pm,px,py,pyx_c,pmx_c):
     """Update conditional distribution of bottleneck variable given y.
     
@@ -141,7 +138,6 @@ def p_ym_c(pm,px,py,pyx_c,pmx_c):
     return pym_c
 
 
-@jit
 def p_m(pmx_c,px):
     """Update marginal distribution of bottleneck variable.
 
@@ -153,5 +149,3 @@ def p_m(pmx_c,px):
         for xi in range(px.size):
             pm[mi] += pmx_c[mi,xi]*px[xi]
     return pm
-
-
