@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
 
+from functools import reduce
 from numba import jit
 from scipy.stats import entropy
 from scipy.spatial import ConvexHull
@@ -56,7 +57,11 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100):
 
         ips[bi] = mi_x1x2_c(pm,px,pmx_c)
         ifs[bi] = mi_x1x2_c(py,pm,pym_c)
-
+    # restrict the returned values to those that, at each value of
+    # beta, actually increase (for Ipast) and do not decrease (for
+    # Ifuture) the information with respect to the previous value of
+    # beta. This is to avoid confounds from cases where the AB
+    # algorithm gets stuck in a local minimum.
     ub, betas = compute_upper_bound(ips, ifs, bs)
     return np.squeeze(ub[:,0]), np.squeeze(ub[:,1]), betas
 
@@ -87,37 +92,19 @@ def compute_upper_bound(IX, IY, betas=None):
 
     """
     points = np.vstack((IX,IY)).T
-    hull = ConvexHull(points)
-    # origin point of the IB curve - defined as that with lowest I(Y).
-    origin = points[hull.vertices][:,1].argmin()
-    # "turnaround" point of the convex hull, or rightmost point of the
-    # IB curve - defined as that with highest I(Y).
-    turnaround = points[hull.vertices][:,1].argmax()
+    selected_idxs = [0]
 
-    # the vertices of the convex hull are always specified in
-    # counterclockwise order. To select the upper part, we need to
-    # distinguish between two cases, depending on whether the first
-    # vertex in the vertices list lies on the upper part or on the
-    # lower part of the hull.
-    if origin > turnaround:
-        # the first vertex lies on the lower part of the hull
-        selected_vertices = list(range(turnaround, origin+1))
-    else:
-        # the first vertex lies on the upper part of the hull
-        selected_vertices = list(range(turnaround, hull.vertices.size))
-        selected_vertices.extend(list(range(0, origin+1)))
-
-    # Finally, we also have to flip the order in which the vertices
-    # are taken, such that our result will be a sequence of (I(X),
-    # I(Y)) pairs where both coordinates are monotonically increasing.
-    selected_vertices = selected_vertices[::-1]
-
-    upper_part = points[hull.vertices[selected_vertices],:]
+    for idx in range(1,points.shape[0]):
+        if points[idx,0]>points[selected_idxs[-1],0] and points[idx,1]>=points[selected_idxs[-1],1]:
+            selected_idxs.append(idx)
+            
+    upper_bound = points[selected_idxs,:]
 
     if betas is None:        
-        return upper_part
+        return upper_bound
     else:
-        return upper_part, betas[hull.vertices[selected_vertices]]
+        return upper_bound, betas[selected_idxs]
+
 
 @jit
 def p_mx_c(pm,px,py,pyx_c,pym_c,beta):
