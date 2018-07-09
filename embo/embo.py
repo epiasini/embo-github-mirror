@@ -56,9 +56,11 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100):
 
         ips[bi] = mi_x1x2_c(pm,px,pmx_c)
         ifs[bi] = mi_x1x2_c(py,pm,pym_c)
-    return ips,ifs,bs
 
-def compute_upper_bound(IX, IY):
+    ub, betas = compute_upper_bound(ips, ifs, bs)
+    return np.squeeze(ub[:,0]), np.squeeze(ub[:,1]), betas
+
+def compute_upper_bound(IX, IY, betas=None):
     """Extract the upper part of the convex hull of an IB sequence.
 
     This is a post-processing step that is needed after computing an
@@ -72,38 +74,50 @@ def compute_upper_bound(IX, IY):
         I(X) values
     IY : array 
         I(Y) values
+    betas : array (default None)
+        beta values from the IB computation
 
     Returns
     -------
     array (n x 2)
         (I(X), I(Y)) coordinates of the upper part of the convex hull
         defined by the input points.
+    array (n)
+        The beta values corresponding to the points of the upper bound.
 
     """
     points = np.vstack((IX,IY)).T
     hull = ConvexHull(points)
     # origin point of the IB curve - defined as that with lowest I(Y).
-    origin = vertices[:,1].argmin()
+    origin = points[hull.vertices][:,1].argmin()
     # "turnaround" point of the convex hull, or rightmost point of the
     # IB curve - defined as that with highest I(Y).
-    turnaround = vertices[:,1].argmax()
+    turnaround = points[hull.vertices][:,1].argmax()
 
     # the vertices of the convex hull are always specified in
     # counterclockwise order. To select the upper part, we need to
     # distinguish between two cases, depending on whether the first
     # vertex in the vertices list lies on the upper part or on the
-    # lower part of the hull. Finally, we also have to flip the order
-    # in which the vertices are taken, such that our result will be a
-    # sequence of (I(X), I(Y)) pairs where both coordinates are
-    # monotonically increasing.
+    # lower part of the hull.
     if origin > turnaround:
         # the first vertex lies on the lower part of the hull
-        upper_part = np.flip(points[hull.vertices[turnaround:(origin+1)],:], axis=0)
+        selected_vertices = list(range(turnaround, origin+1))
     else:
         # the first vertex lies on the upper part of the hull
-        upper_part = np.flip(np.vstack((points[hull.vertices[turnaround:],:], points[hull.vertices[:(origin+1)],:])), axis=0)
+        selected_vertices = list(range(turnaround, hull.vertices.size))
+        selected_vertices.extend(list(range(0, origin+1)))
 
-    return upper_part
+    # Finally, we also have to flip the order in which the vertices
+    # are taken, such that our result will be a sequence of (I(X),
+    # I(Y)) pairs where both coordinates are monotonically increasing.
+    selected_vertices = selected_vertices[::-1]
+
+    upper_part = points[hull.vertices[selected_vertices],:]
+
+    if betas is None:        
+        return upper_part
+    else:
+        return upper_part, betas[hull.vertices[selected_vertices]]
 
 @jit
 def p_mx_c(pm,px,py,pyx_c,pym_c,beta):
