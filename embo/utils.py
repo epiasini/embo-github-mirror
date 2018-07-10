@@ -9,8 +9,6 @@ def p_joint(x1,x2,windowx1=1,windowx2=1):
     
     x1 = first array
     x2 = second array
-    numuniquex1 = number of unique symbols in the x1 array
-    numuniquex2 = number of unique symbols in the x2 array
     windowx1 = moving window size to consider for the x1 array
     windowx2 = moving window size to consider for the x2 array
     
