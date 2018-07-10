@@ -3,7 +3,6 @@ test:2.7:
   script:
   - apt-get update -qy
   - apt-get install -y python-numpy python-scipy python-pip
-  - python2 -m pip install numba --user
   - python setup.py test
 
 test:3.x:
@@ -11,5 +10,4 @@ test:3.x:
   script:
   - apt-get update -qy
   - apt-get install -y python3-numpy python3-scipy python3-pip
-  - python3 -m pip install numba --user
   - python3 setup.py test

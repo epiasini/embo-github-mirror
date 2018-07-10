@@ -1,10 +1,9 @@
 from __future__ import division
 import numpy as np
 
-from numba import jit
 from scipy.stats import entropy
 
-from .utils import p_joint, mi_x1x2_c
+from .utils import p_joint, mi_x1x2_c, compute_upper_bound
 
 
 def empirical_bottleneck(x,y,numuniquex=0,numuniquey=0,**kw):
@@ -22,15 +21,16 @@ def empirical_bottleneck(x,y,numuniquex=0,numuniquey=0,**kw):
     return i_p,i_f,beta,mi,entropy(px,base=2),entropy(py,base=2)
 
 def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100):
-    """
-    Compute an Information Bottleneck curve
+    """Compute an Information Bottleneck curve
 
     px: marginal probability distribution for the past
     py: marginal distribution for the future
     maxbeta: the maximum value of beta to use to compute the curve
     iterations: number of iterations to use to for the curve to converge for each value of beta
     
-    return vectors of ipast and ifuture (ips and ifs respectively) for different values of beta (bs)
+    return vectors of ipast and ifuture (ips and ifs respectively) for
+    different values of beta (bs)
+
     """
     pm_size = px.size
     bs = np.linspace(0.01,maxbeta,numbeta) #value of beta
@@ -54,9 +54,15 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100):
 
         ips[bi] = mi_x1x2_c(pm,px,pmx_c)
         ifs[bi] = mi_x1x2_c(py,pm,pym_c)
-    return ips,ifs,bs
+    # restrict the returned values to those that, at each value of
+    # beta, actually increase (for Ipast) and do not decrease (for
+    # Ifuture) the information with respect to the previous value of
+    # beta. This is to avoid confounds from cases where the AB
+    # algorithm gets stuck in a local minimum.
+    ub, betas = compute_upper_bound(ips, ifs, bs)
+    return np.squeeze(ub[:,0]), np.squeeze(ub[:,1]), betas
 
-@jit
+
 def p_mx_c(pm,px,py,pyx_c,pym_c,beta):
     """Update conditional distribution of bottleneck random variable given x.
 
@@ -74,7 +80,6 @@ def p_mx_c(pm,px,py,pyx_c,pym_c,beta):
     return pmx_c/pmx_c.sum(axis=0) #Normalize 
 
 
-@jit
 def p_ym_c(pm,px,py,pyx_c,pmx_c):
     """Update conditional distribution of bottleneck variable given y.
     
@@ -91,7 +96,6 @@ def p_ym_c(pm,px,py,pyx_c,pmx_c):
     return pym_c
 
 
-@jit
 def p_m(pmx_c,px):
     """Update marginal distribution of bottleneck variable.
 
@@ -103,5 +107,3 @@ def p_m(pmx_c,px):
         for xi in range(px.size):
             pm[mi] += pmx_c[mi,xi]*px[xi]
     return pm
-
-
