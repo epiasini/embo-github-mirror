@@ -1,11 +1,9 @@
 from __future__ import division
 import numpy as np
 
-from functools import reduce
 from scipy.stats import entropy
-from scipy.spatial import ConvexHull
 
-from .utils import p_joint, mi_x1x2_c
+from .utils import p_joint, mi_x1x2_c, compute_upper_bound
 
 
 def empirical_bottleneck(x,y,numuniquex=0,numuniquey=0,**kw):
@@ -63,46 +61,6 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100):
     # algorithm gets stuck in a local minimum.
     ub, betas = compute_upper_bound(ips, ifs, bs)
     return np.squeeze(ub[:,0]), np.squeeze(ub[:,1]), betas
-
-def compute_upper_bound(IX, IY, betas=None):
-    """Extract the upper part of the convex hull of an IB sequence.
-
-    This is a post-processing step that is needed after computing an
-    IB sequence (defined as a sequence of (IX, IY) pairs),
-    to remove the random fluctuations in the result induced by the AB
-    algorithm getting stuck in local minima.
-
-    Parameters
-    ----------
-    IX : array
-        I(X) values
-    IY : array 
-        I(Y) values
-    betas : array (default None)
-        beta values from the IB computation
-
-    Returns
-    -------
-    array (n x 2)
-        (I(X), I(Y)) coordinates of the upper part of the convex hull
-        defined by the input points.
-    array (n)
-        The beta values corresponding to the points of the upper bound.
-
-    """
-    points = np.vstack((IX,IY)).T
-    selected_idxs = [0]
-
-    for idx in range(1,points.shape[0]):
-        if points[idx,0]>points[selected_idxs[-1],0] and points[idx,1]>=points[selected_idxs[-1],1]:
-            selected_idxs.append(idx)
-            
-    upper_bound = points[selected_idxs,:]
-
-    if betas is None:        
-        return upper_bound
-    else:
-        return upper_bound, betas[selected_idxs]
 
 
 def p_mx_c(pm,px,py,pyx_c,pym_c,beta):

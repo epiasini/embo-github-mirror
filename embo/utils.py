@@ -41,3 +41,43 @@ def mi_x1x2_c(px1,px2,px1x2_c):
         conditional_entropy += px2[x2i] * entropy(px1x2_c[:,x2i], base=2)
     return marginal_entropy - conditional_entropy
 
+def compute_upper_bound(IX, IY, betas=None):
+    """Extract the upper part of the convex hull of an IB sequence.
+
+    This is a post-processing step that is needed after computing an
+    IB sequence (defined as a sequence of (IX, IY) pairs),
+    to remove the random fluctuations in the result induced by the AB
+    algorithm getting stuck in local minima.
+
+    Parameters
+    ----------
+    IX : array
+        I(X) values
+    IY : array 
+        I(Y) values
+    betas : array (default None)
+        beta values from the IB computation
+
+    Returns
+    -------
+    array (n x 2)
+        (I(X), I(Y)) coordinates of the upper part of the convex hull
+        defined by the input points.
+    array (n)
+        The beta values corresponding to the points of the upper bound.
+
+    """
+    points = np.vstack((IX,IY)).T
+    selected_idxs = [0]
+
+    for idx in range(1,points.shape[0]):
+        if points[idx,0]>points[selected_idxs[-1],0] and points[idx,1]>=points[selected_idxs[-1],1]:
+            selected_idxs.append(idx)
+            
+    upper_bound = points[selected_idxs,:]
+
+    if betas is None:        
+        return upper_bound
+    else:
+        return upper_bound, betas[selected_idxs]
+
