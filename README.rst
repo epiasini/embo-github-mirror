@@ -49,9 +49,8 @@ You probably want to do something like this:
    y = np.array([1,0,1,0,1,0,1,0,1,0]*300)
 
    # IB bound for different values of beta
-   i_p,i_f,beta,mi = empirical_bottleneck(x,y)
+   i_p,i_f,beta,mi,H_x,H_y = empirical_bottleneck(x,y)
 
-   
    
 
 
