@@ -3,7 +3,7 @@ from __future__ import division
 import numpy as np
 from scipy.stats import entropy
 
-def p_joint(x1,x2,numuniquex1=0,numuniquex2=0,windowx1=1,windowx2=1):
+def p_joint(x1,x2,windowx1=1,windowx2=1):
     """
     Compute the joint distribution between two data series
     
@@ -16,10 +16,10 @@ def p_joint(x1,x2,numuniquex1=0,numuniquex2=0,windowx1=1,windowx2=1):
     
     return a matrix of the joint probability p(x1,x2)
     """
-    if numuniquex1==0:
-        numuniquex1 = np.unique(x1).size
-    if numuniquex2==0:
-        numuniquex2 = np.unique(x2).size
+    x1_unique, x1 = np.unique(x1, return_inverse=True)
+    x2_unique, x2 = np.unique(x2, return_inverse=True)
+    numuniquex1 = x1_unique.size
+    numuniquex2 = x2_unique.size
     numwordsx1 = numuniquex1**windowx1
     numwordsx2 = numuniquex2**windowx2
     aux_base_x1 = numuniquex1**np.arange(windowx1)[::-1]

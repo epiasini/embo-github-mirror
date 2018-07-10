@@ -3,6 +3,22 @@ import numpy as np
 
 from embo import embo
 
+def test_origin(x,y):
+    """Check that the IB bound starts at (0,0) for small beta"""
+    i_p,i_f,beta,mi,_,_ = embo.empirical_bottleneck(x,y)
+    np.testing.assert_allclose((i_p[0],i_f[0]),(0,0),rtol=1e-7,atol=1e-10)
+
+def test_asymptote(x,y):
+    """Check that the IB bound saturates at (H(x),MI(X:Y)) for large beta.
+    
+    Note that both H(X) and MI(X,Y) are computed using the functions
+    defined within EMBO.
+
+    """
+    i_p,i_f,beta,mi,hx,hy = embo.empirical_bottleneck(x,y,maxbeta=10)
+    np.testing.assert_allclose((i_p[-1],i_f[-1]),(hx,mi),rtol=1e-5)
+
+
 class TestBinarySequence(unittest.TestCase):
     def setUp(self):
         # Fake data sequence
@@ -10,19 +26,12 @@ class TestBinarySequence(unittest.TestCase):
         self.y = np.array([1,0,1,0,1,0,1,0,1,0]*300)
 
     def test_origin(self):
-        """Check that the IB bound starts at (0,0) for small beta"""
-        i_p,i_f,beta,mi,_,_ = embo.empirical_bottleneck(self.x,self.y)
-        np.testing.assert_allclose((i_p[0],i_f[0]),(0,0),rtol=1e-7,atol=1e-10)
-
+        """Check beta->0 limit for binary sequence"""
+        test_origin(self.x, self.y)
+        
     def test_asymptote(self):
-        """Check that the IB bound saturates at (H(x),MI(X:Y)) for large beta.
-
-        Note that both H(X) and MI(X,Y) are computed using the
-        functions defined within EMBO.
-
-        """
-        i_p,i_f,beta,mi,hx,hy = embo.empirical_bottleneck(self.x,self.y,maxbeta=10)
-        np.testing.assert_allclose((i_p[-1],i_f[-1]),(hx,mi),rtol=1e-5)
+        """Check beta->infinity limit for binary sequence"""
+        test_asymptote(self.x, self.y)
 
 class TestUpperBound(unittest.TestCase):
     def setUp(self):
@@ -40,4 +49,18 @@ class TestUpperBound(unittest.TestCase):
         u, betas = embo.compute_upper_bound(self.a[:,0], self.a[:,1], self.betas)
         np.testing.assert_array_equal(betas, self.betas[self.true_idxs])
         
-    
+class TestArbitraryAlphabet(unittest.TestCase):
+    def setUp(self):
+        # Fake data sequence
+        self.x = np.array([0,0,0,2,0,2,0,2,0,2]*300)
+        self.y = np.array([3.5,0,3.5,0,3.5,0,3.5,0,3.5,0]*300)
+
+    def test_origin(self):
+        """Check beta->0 limit for sequence with arbitrary alphabet"""
+        test_origin(self.x, self.y)
+        
+    def test_asymptote(self):
+        """Check beta->infinity limit for sequence with arbitrary alphabet"""
+        test_asymptote(self.x, self.y)
+
+        

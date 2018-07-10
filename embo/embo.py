@@ -20,6 +20,7 @@ def empirical_bottleneck(x,y,numuniquex=0,numuniquey=0,**kw):
     mi = mi_x1x2_c(py, px, pyx_c)
     return i_p,i_f,beta,mi,entropy(px,base=2),entropy(py,base=2)
 
+
 def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100):
     """Compute an Information Bottleneck curve
 
