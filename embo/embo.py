@@ -16,10 +16,9 @@ def empirical_bottleneck(x,y,numuniquex=0,numuniquey=0,**kw):
     py = pxy_j.sum(axis=0)
     pyx_c = pxy_j.T / px
     #Calculate the information bottleneck for different values of beta
-    i_p,i_f,beta = IB(px,py,pyx_c,**kw)
+    i_p,i_f,beta,mixy,hx = IB(px,py,pyx_c,**kw)
     # Return array of ipasts and ifutures for array of different values of beta - mi should correspond to the saturation point
-    mi = mi_x1x2_c(py, px, pyx_c)
-    return i_p,i_f,beta,mi,entropy(px,base=2),entropy(py,base=2)
+    return i_p,i_f,beta,mixy,hx,entropy(py,base=2)
 
 
 def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100,restarts=3):
@@ -37,6 +36,10 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100,restarts=3):
     """
     pm_size = px.size
     bs = np.linspace(0.01,maxbeta,numbeta) #value of beta
+
+    mixy = mi_x1x2_c(py, px, pyx_c)
+    hx = entropy(px,base=2)
+
     ips = np.zeros(bs.size)
     ifs = np.zeros(bs.size)
     for bi in range(bs.size):
@@ -65,6 +68,9 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100,restarts=3):
         selected_candidate = min(candidates, key=lambda c: c['functional'])
         ips[bi] = selected_candidate['past_info']
         ifs[bi] = selected_candidate['future_info']
+        # if we have reached a large enough beta to reach saturation, we can stop
+        if np.allclose((ips[bi],ifs[bi]),(hx,mixy),rtol=1e-5):
+            break
     # restrict the returned values to those that, at each value of
     # beta, actually increase (for Ipast) and do not decrease (for
     # Ifuture) the information with respect to the previous value of
@@ -73,7 +79,7 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100,restarts=3):
     ub, bs = compute_upper_bound(ips, ifs, bs)
     ips = np.squeeze(ub[:,0])
     ifs = np.squeeze(ub[:,1])
-    return ips, ifs, bs
+    return ips, ifs, bs, mixy, hx
 
 
 def p_mx_c(pm,px,py,pyx_c,pym_c,beta):
