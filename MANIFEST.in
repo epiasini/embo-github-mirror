@@ -1,1 +1,1 @@
-include examples/*.ipynb
+include embo/examples/*.ipynb
