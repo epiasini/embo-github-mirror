@@ -51,3 +51,7 @@ i_p,i_f,beta,mi,H_x,H_y = empirical_bottleneck(x,y)
 ## More examples
 A simple example of usage with synthetic data can be found in the
 source distribution, located at `embo/examples/embo_example.ipynb`.
+
+## Authors
+`embo` is maintained by Eugenio Piasini, Alexandre Filipowicz and
+Jonathan Levine.
