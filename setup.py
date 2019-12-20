@@ -35,10 +35,13 @@ setup (name=NAME,
            "Intended Audience :: Science/Research",
            "Topic :: Scientific/Engineering :: Information Analysis",
            "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-           "Programming Language :: Python :: 3"
+           "Programming Language :: Python :: 3",
+           "Operating System :: OS Independent",
+           "Environment :: Console"
        ],
        packages=["embo",
                  "embo.test"],
        test_suite="embo.test",
+       include_package_data=True,
        data_files=[(NAME, [os.path.join(NAME,VERSION_FILE)])])
 

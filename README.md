@@ -1,4 +1,6 @@
 # EMBO - Empirical Bottleneck
+[![PyPI version](https://img.shields.io/pypi/v/embo.svg)](https://pypi.python.org/pypi/embo/)
+[![Build status](https://img.shields.io/gitlab/pipeline/epiasini/embo)](https://gitlab.com/epiasini/embo/pipelines)
 
 A Python implementation of the Information Bottleneck analysis
 framework (Tishby, Pereira, Bialek 2000), especially geared towards
