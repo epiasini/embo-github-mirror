@@ -1,4 +1,5 @@
 # EMBO - Empirical Bottleneck
+[![License](https://img.shields.io/pypi/l/embo)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 [![PyPI version](https://img.shields.io/pypi/v/embo.svg)](https://pypi.python.org/pypi/embo/)
 [![Build status](https://img.shields.io/gitlab/pipeline/epiasini/embo)](https://gitlab.com/epiasini/embo/pipelines)
 
