@@ -5,9 +5,9 @@ except ImportError:
 import os
 import codecs
 
-NAME = 'embo'
-VERSION_FILE = 'VERSION'
-INSTALL_REQUIRES = ['numpy', 'scipy']
+NAME = "embo"
+VERSION_FILE = "VERSION"
+INSTALL_REQUIRES = ["numpy", "scipy"]
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -21,12 +21,12 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup (name=NAME,
        version=VERSION,
-       url="https://gitlab.com/epiasini/embo",
+       url="https://gitlab.com/epiasini/{}".format(NAME),
        description="Empirical Information Bottleneck",
        long_description=LONG_DESCRIPTION,
        long_description_content_type="text/markdown",
        install_requires=INSTALL_REQUIRES,
-       python_requires='>=3',
+       python_requires=">=3",
        author="Eugenio Piasini",
        author_email="epiasini@sas.upenn.edu",
        license="GPLv3+",
@@ -39,9 +39,6 @@ setup (name=NAME,
            "Operating System :: OS Independent",
            "Environment :: Console"
        ],
-       packages=["embo",
-                 "embo.test"],
-       test_suite="embo.test",
-       include_package_data=True,
-       data_files=[(NAME, [os.path.join(NAME,VERSION_FILE)])])
-
+       packages=[NAME,
+                 "{}.test".format(NAME)],
+       test_suite="{}.test".format(NAME))

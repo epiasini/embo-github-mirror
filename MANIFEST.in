@@ -1,1 +1,2 @@
 include embo/examples/*.ipynb
+include embo/VERSION
