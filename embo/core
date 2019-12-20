@@ -1,8 +1,9 @@
-from __future__ import division
 import numpy as np
+import multiprocessing as mp
+
 from scipy.stats import entropy
 from .utils import p_joint, mi_x1x2_c, compute_upper_bound
-import multiprocessing as mp
+
 np.seterr(divide='ignore', invalid='ignore')
 
 

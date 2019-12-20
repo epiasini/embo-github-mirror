@@ -26,14 +26,13 @@ setup (name=NAME,
        long_description=LONG_DESCRIPTION,
        install_requires=INSTALL_REQUIRES,
        author="Eugenio Piasini",
-       author_email="eugenio.piasini@gmail.com",
+       author_email="epiasini@sas.upenn.edu",
        license="GPLv3+",
        classifiers=[
-           "Development Status :: 3 - Alpha",
+           "Development Status :: 4 - Beta",
            "Intended Audience :: Science/Research",
            "Topic :: Scientific/Engineering :: Information Analysis",
            "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"
-           "Programming Language :: Python :: 2.7",
            "Programming Language :: Python :: 3"
        ],
        packages=["embo",

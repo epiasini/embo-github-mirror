@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from embo import embo
+import embo
 
 def test_origin(x,y):
     """Check that the IB bound starts at (0,0) for small beta"""
@@ -63,4 +63,5 @@ class TestArbitraryAlphabet(unittest.TestCase):
         """Check beta->infinity limit for sequence with arbitrary alphabet"""
         test_asymptote(self.x, self.y)
 
-        
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

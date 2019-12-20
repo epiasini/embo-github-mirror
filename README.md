@@ -4,39 +4,39 @@ A Python implementation of the Information Bottleneck analysis
 framework (Tishby, Pereira, Bialek 2000), especially geared towards
 the analysis of concrete, finite-size data sets.
 
+## Requirements
+
+`embo` requires Python 3, `numpy` and `scipy`.
+
 ## Installation
-
-For the moment, just clone this repo by doing something like
+To install the latest release, run:
 ``` bash
-cd /home/username/src
-git clone git@gitlab.com:epiasini/embo.git
+pip install pymuvr
 ```
-and add its location to your `PYTHONPATH`:
-``` python
-import sys
-sys.path.append("/home/username/src/embo")
-```
-Alternatively, you can simply install via `python setup.py install
---user`, but I'd discourage it for the moment if you feel like you
-will be making changes to the library as you use it. From a technical
-standpoint, this package is essentially ready for upload to the Python
-Package Index and distribution via `pip`, so this will be easy to do
-when we feel like sharing it more publicly.
 
-## Testing
-From within the root folder of the package (i.e. this folder), run
+### Testing
+(requires `setuptools`). If `embo` is already installed on your
+system, look for the copy of the ``test_embo.py`` script installed
+alongside the rest of the pymuvr files and execute it. For example:
+
 ``` bash
-python3 setup.py test
+python /usr/lib/python3.X/site-packages/embo/test_embo.py
 ```
-This should run through all tests specified in `embo/test`. These may
-generate some `numba` warnings, but they should run successfully (look
-for the summary at the end of the output).
+
+**Alternatively**, if you have downloaded the source, from within the
+root folder of the source distribution run:
+
+``` bash
+python setup.py test
+```
+
+This should run through all tests specified in `embo/test`.
 
 ## Usage
 
 You probably want to do something like this:
 ``` python
-from embo.embo import empirical_bottleneck
+from embo import empirical_bottleneck
 
 # data sequences
 x = np.array([0,0,0,1,0,1,0,1,0,1]*300)
