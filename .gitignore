@@ -3,3 +3,4 @@ embo.egg-info/
 build
 dist
 embo/examples/.ipynb_checkpoints
+.DS_Store
