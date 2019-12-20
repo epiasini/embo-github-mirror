@@ -6,7 +6,7 @@ import embo
 def test_origin(x,y):
     """Check that the IB bound starts at (0,0) for small beta"""
     i_p,i_f,beta,mi,_,_ = embo.empirical_bottleneck(x,y)
-    np.testing.assert_allclose((i_p[0],i_f[0]),(0,0),rtol=1e-7,atol=1e-10)
+    np.testing.assert_allclose((i_p[0],i_f[0]),(0,0),rtol=1e-7,atol=1e-9)
 
 def test_asymptote(x,y):
     """Check that the IB bound saturates at (H(x),MI(X:Y)) for large beta.
