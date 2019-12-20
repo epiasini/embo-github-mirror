@@ -16,7 +16,7 @@ with open(os.path.join(here, NAME, VERSION_FILE)) as version_file:
     VERSION = version_file.read().strip()
 
 # get long description from README
-with codecs.open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
+with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
 
 setup (name=NAME,

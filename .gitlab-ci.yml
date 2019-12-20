@@ -1,10 +1,3 @@
-test:2.7:
-  image: python:2-stretch
-  script:
-  - apt-get update -qy
-  - apt-get install -y python-numpy python-scipy python-pip
-  - python setup.py test
-
 test:3.x:
   image: python:3-stretch
   script:
