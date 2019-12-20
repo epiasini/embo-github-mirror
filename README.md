@@ -41,6 +41,7 @@ This should run through all tests specified in `embo/test`.
 
 You probably want to do something like this:
 ``` python
+import numpy as np
 from embo import empirical_bottleneck
 
 # data sequences
