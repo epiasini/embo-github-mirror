@@ -47,3 +47,7 @@ y = np.array([1,0,1,0,1,0,1,0,1,0]*300)
 # IB bound for different values of beta
 i_p,i_f,beta,mi,H_x,H_y = empirical_bottleneck(x,y)
 ```
+
+## More examples
+A simple example of usage with synthetic data can be found in the
+source distribution, located at `embo/examples/embo_example.pynb`.
