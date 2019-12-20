@@ -11,13 +11,13 @@ the analysis of concrete, finite-size data sets.
 ## Installation
 To install the latest release, run:
 ``` bash
-pip install pymuvr
+pip install embo
 ```
 
 ### Testing
 (requires `setuptools`). If `embo` is already installed on your
-system, look for the copy of the ``test_embo.py`` script installed
-alongside the rest of the pymuvr files and execute it. For example:
+system, look for the copy of the `test_embo.py` script installed
+alongside the rest of the `embo` files and execute it. For example:
 
 ``` bash
 python /usr/lib/python3.X/site-packages/embo/test_embo.py
