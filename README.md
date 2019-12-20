@@ -13,6 +13,8 @@ To install the latest release, run:
 ``` bash
 pip install embo
 ```
+(depending on your system, you may need to use `pip3` instead of `pip`
+in the command above).
 
 ### Testing
 (requires `setuptools`). If `embo` is already installed on your
