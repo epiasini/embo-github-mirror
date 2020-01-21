@@ -1,7 +1,4 @@
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
 import os
 import codecs
 
@@ -41,4 +38,5 @@ setup (name=NAME,
        ],
        packages=[NAME,
                  "{}.test".format(NAME)],
-       test_suite="{}.test".format(NAME))
+       test_suite="{}.test".format(NAME),
+       include_package_data=True)
