@@ -43,43 +43,43 @@ This should run through all tests specified in `embo/test`.
 ### The Information Bottleneck
 We refer to [[Tishby, Pereira, Bialek
 2001]](https://arxiv.org/abs/physics/0004057) for a general
-introduction to the Information Bottleneck. Briefly, if $X$ and $Y$
+introduction to the Information Bottleneck. Briefly, if X and Y
 are two random variables, we are interested in finding another random
-variable $M$ (called the "bottleneck" variable) that solves the
+variable M (called the "bottleneck" variable) that solves the
 following optimisation problem:
-$$
-\min_{p(m|x)}I(M:X) - \beta I(M:Y)
-$$
-for any $\beta>0$, and where $M$ is constrained to be independent on
-$Y$ conditional on $X$:
-$$
-p(x,m,y) = p(x)p(m|x)p(y|x)
-$$
 
-Intuitively, we want to find the stochastic mapping $p(M|X)$ that
-extracts from $X$ as much information about $Y$ as possible while
-forgetting all irrelevant information. $\beta$ is a free parameter
+min_{p(m|x)}I(M:X) - β I(M:Y)
+
+for any β>0, and where M is constrained to be independent on
+Y conditional on X:
+
+p(x,m,y) = p(x)p(m|x)p(y|x)
+
+
+Intuitively, we want to find the stochastic mapping p(M|X) that
+extracts from X as much information about Y as possible while
+forgetting all irrelevant information. β is a free parameter
 that sets the relative importance of forgetting irrelevant information
 versus remembering useful information. Usually, one is interested in
-the curve described by $I(M:X)$ and $I(M:Y)$ at the solution of the
-bottleneck problem for a range of values of $\beta$. This curve
+the curve described by I(M:X) and I(M:Y) at the solution of the
+bottleneck problem for a range of values of β. This curve
 gives the optimal tradeoff of compression and prediction, telling us
-what is the minimum amount of information one needs to know about $X$
-to be able to predict $Y$ to a certain accuracy, or vice versa, what
-is the maximum accuracy one can have in predicting $Y$ given a certain
-amount of information about $X$.
+what is the minimum amount of information one needs to know about X
+to be able to predict Y to a certain accuracy, or vice versa, what
+is the maximum accuracy one can have in predicting Y given a certain
+amount of information about X.
 
 ### Using `embo`
-In embo, we assume that the true joint distribution of $X$ and $Y$ is
+In embo, we assume that the true joint distribution of X and Y is
 not available, and that we only have a set of joint empirical
-observations. We also assume that $X$ and $Y$ both take on a finite
+observations. We also assume that X and Y both take on a finite
 number of discrete values. In its most basic usage, the
 `empirical_bottleneck` function takes as arguments an array of
-observations for $X$ and an (equally long) array of observations for
-$Y$, and it returns a set of $\beta$ values and the
-optimal values of $I(M:X)$ and $I(M:Y)$ corresponding to those
-$\beta$. The optimal tradeoff can then be visualised by plotting
-$I(M:Y)$ vs $I(M:Y)$.
+observations for X and an (equally long) array of observations for
+Y, and it returns a set of β values and the
+optimal values of I(M:X) and I(M:Y) corresponding to those
+β. The optimal tradeoff can then be visualised by plotting
+I(M:Y) vs I(M:Y).
 
 For instance:
 
