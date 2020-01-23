@@ -1,6 +1,9 @@
 *.pyc
+*.png
+*.svg
 embo.egg-info/
 build
 dist
 embo/examples/.ipynb_checkpoints
 .DS_Store
+/.ipynb_checkpoints/
