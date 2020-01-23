@@ -7,20 +7,21 @@ from .utils import p_joint, mi_x1x2_c, compute_upper_bound
 np.seterr(divide='ignore', invalid='ignore')
 
 
-def empirical_bottleneck(x,y,numuniquex=0,numuniquey=0,**kw):
+def empirical_bottleneck(x,y,return_entropies=False,numuniquex=0,numuniquey=0,**kw):
     """ Compute an IB curve for two empirical sequences x and y - main function
     
     Arguments:
-    x -- first empirical sequence (past)
-    y -- second empirical sequence (future)
+    x -- first empirical sequence ("past")
+    y -- second empirical sequence ("future")
+    return_entropies (bool) -- whether to return the marginal entropies of x and y
     
     Returns:
     i_p -- values of ipast for each value of beta
     i_f -- values of ifuture for each value of beta
     beta -- values of beta considered
-    mixy -- mutual information between x and y (curve saturation point)
-    hx -- entropy of x
-    hy -- entropy of y
+    mixy -- mutual information between x and y (curve saturation point) (only returned if return_entropies is True)
+    hx -- entropy of x (only returned if return_entropies is True)
+    hy -- entropy of y (only returned if return_entropies is True)
     """
     
     # Marginal, joint and conditional distributions required to calculate the IB
@@ -29,12 +30,15 @@ def empirical_bottleneck(x,y,numuniquex=0,numuniquey=0,**kw):
     py = pxy_j.sum(axis=0)
     pyx_c = pxy_j.T / px
     
-    #Calculate the information bottleneck for different values of beta
-    i_p,i_f,beta,mixy,hx = IB(px,py,pyx_c,**kw)
+    #Calculate the information bottleneck for a range of values of beta
+    i_x,i_y,beta,mixy,hx = IB(px,py,pyx_c,**kw)
     hy = entropy(py,base=2)
     
     # Return array of ipasts and ifutures for array of different values of beta - mixy should correspond to the saturation point
-    return i_p,i_f,beta,mixy,hx,hy
+    if return_entropies:
+        return i_x, i_y, beta, mixy, hx, hy
+    else:
+        return i_x, i_y, beta
     
 def beta_iter(b,px,py,pyx_c,pm_size,restarts,iterations):
     """Function to run BA algorithm for individual values of beta
