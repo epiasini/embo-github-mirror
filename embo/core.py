@@ -7,13 +7,14 @@ from .utils import p_joint, mi_x1x2_c, compute_upper_bound
 np.seterr(divide='ignore', invalid='ignore')
 
 
-def empirical_bottleneck(x,y,return_entropies=False,numuniquex=0,numuniquey=0,**kw):
+def empirical_bottleneck(x,y,return_entropies=False,numuniquex=0,numuniquey=0,**kwargs):
     """ Compute an IB curve for two empirical sequences x and y - main function
     
     Arguments:
     x -- first empirical sequence ("past")
     y -- second empirical sequence ("future")
     return_entropies (bool) -- whether to return the marginal entropies of x and y
+    kwargs -- additional keyword arguments to be passed to IB().
     
     Returns:
     i_p -- values of ipast for each value of beta
@@ -31,7 +32,7 @@ def empirical_bottleneck(x,y,return_entropies=False,numuniquex=0,numuniquey=0,**
     pyx_c = pxy_j.T / px
     
     #Calculate the information bottleneck for a range of values of beta
-    i_x,i_y,beta,mixy,hx = IB(px,py,pyx_c,**kw)
+    i_x,i_y,beta,mixy,hx = IB(px,py,pyx_c,**kwargs)
     hy = entropy(py,base=2)
     
     # Return array of ipasts and ifutures for array of different values of beta - mixy should correspond to the saturation point

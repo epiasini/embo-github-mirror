@@ -93,7 +93,7 @@ x = np.array([0,0,0,1,0,1,0,1,0,1])
 y = np.array([0,1,0,1,0,1,0,1,0,1])
 
 # compute the IB bound from the data
-I_x,I_y,_,_,_,_ = empirical_bottleneck(x,y)
+I_x,I_y,_ = empirical_bottleneck(x,y)
 
 # plot the optimal compression-prediction bound
 plt.plot(I_x,I_y)
@@ -106,6 +106,10 @@ A more meaningful example is located at
 [embo/examples/Markov-Chains.ipynb](embo/examples/Markov-Chains.ipynb),
 where we compute the Information Bottleneck between the past and the
 future of time series generated from different Markov chains.
+
+### Further details
+For more details, please consult the docstrings for
+`empirical_bottleneck` and `IB`.
 
 ## Authors
 `embo` is maintained by Eugenio Piasini, Alexandre Filipowicz and

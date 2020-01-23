@@ -1,6 +1,7 @@
 *.pyc
 *.png
 *.svg
+*.eps
 embo.egg-info/
 build
 dist
