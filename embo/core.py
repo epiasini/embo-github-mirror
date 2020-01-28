@@ -7,7 +7,7 @@ from .utils import p_joint, mi_x1x2_c, compute_upper_bound
 np.seterr(divide='ignore', invalid='ignore')
 
 
-def empirical_bottleneck(x,y,return_entropies=False,numuniquex=0,numuniquey=0,**kwargs):
+def empirical_bottleneck(x,y,return_entropies=False,window_size_x=1,window_size_y=1,**kwargs):
     """ Compute an IB curve for two empirical sequences x and y - main function
     
     Arguments:
@@ -26,7 +26,7 @@ def empirical_bottleneck(x,y,return_entropies=False,numuniquex=0,numuniquey=0,**
     """
     
     # Marginal, joint and conditional distributions required to calculate the IB
-    pxy_j = p_joint(x,y)
+    pxy_j = p_joint(x,y,window_size_x,window_size_y)
     px = pxy_j.sum(axis=1)
     py = pxy_j.sum(axis=0)
     pyx_c = pxy_j.T / px
