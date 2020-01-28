@@ -8,12 +8,13 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 def empirical_bottleneck(x,y,return_entropies=False,window_size_x=1,window_size_y=1,**kwargs):
-    """ Compute an IB curve for two empirical sequences x and y - main function
+    """ Compute an IB curve for two empirical sequences x and y
     
     Arguments:
     x -- first empirical sequence ("past")
     y -- second empirical sequence ("future")
     return_entropies (bool) -- whether to return the marginal entropies of x and y
+    window_size_x, window_size_y (int) -- size of the moving windows to be used to compute the IB curve (you typically don't need to worry about this unless you're doing a "past-future bottleneck"-type analysis). The time window on x (which in these cases is typically the "past") is taken backwards, and the time window on y (the "future") is taken forwards. For instance, setting window_size_x=3 and window_size_y=2 will yield the IB curve between (X_{t-2},X_{t-1},X_{t}) and (Y_{t},Y_{t+1}).
     kwargs -- additional keyword arguments to be passed to IB().
     
     Returns:
