@@ -91,8 +91,9 @@ def IB(px,py,pyx_c,maxbeta=5,numbeta=30,iterations=100,restarts=3,processes=1):
     """Compute an Information Bottleneck curve
     
     Arguments:
-    px -- marginal probability distribution for the past
-    py -- marginal distribution for the future
+    px -- marginal probability distribution for X
+    py -- marginal probability distribution for Y
+    pyx_c -- conditional probability of Y given X
     maxbeta -- the maximum value of beta to use to compute the curve
     iterations -- number of iterations to use to for the curve to converge for each value of beta
     restarts -- number of times the optimization procedure should be restarted (for each value of beta) from different random initial conditions.
