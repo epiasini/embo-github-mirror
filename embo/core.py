@@ -15,7 +15,7 @@ class EmpiricalBottleneck:
             Arguments:
             x -- first empirical sequence ("past")
             y -- second empirical sequence ("future")
-            return_entropies (bool) -- whether to return the marginal entropies of x and y
+            window_size_x, window_size_y (int) -- size of the moving windows to be used to compute the IB curve (you typically don't need to worry about this unless you're doing a "past-future bottleneck"-type analysis). The time window on x (which in these cases is typically the "past") is taken backwards, and the time window on y (the "future") is taken forwards. For instance, setting window_size_x=3 and window_size_y=2 will yield the IB curve between (X_{t-2},X_{t-1},X_{t}) and (Y_{t},Y_{t+1}).
             kwargs -- additional keyword arguments to be passed to IB().
 
         """
@@ -29,7 +29,7 @@ class EmpiricalBottleneck:
         self.i_x, self.i_y, self.beta, self.mixy, self.hx = self.IB(px, py, pyx_c, **kwargs)
         self.hy = entropy(py, base=2)
 
-    def get_empirical_bottleneck(self):
+    def get_empirical_bottleneck(self, return_entropies=False):
         """Return array of ipasts and ifutures for array of different values of beta
          mixy should correspond to the saturation point
          Returns:
@@ -40,7 +40,10 @@ class EmpiricalBottleneck:
             hx -- entropy of x (only returned if return_entropies is True)
             hy -- entropy of y (only returned if return_entropies is True)
         """
-        return self.i_x, self.i_y, self.beta, self.mixy, self.hx, self.hy
+        if return_entropies:
+            return self.i_x, self.i_y, self.beta, self.mixy, self.hx, self.hy
+        else:
+            return self.i_x, self.i_y, self.beta
     
     def get_ipast(self):
         return self.i_x
@@ -107,8 +110,9 @@ class EmpiricalBottleneck:
         """Compute an Information Bottleneck curve
 
         Arguments:
-        px -- marginal probability distribution for the past
-        py -- marginal distribution for the future
+        px -- marginal probability distribution for X
+        py -- marginal probability distribution for Y
+        pyx_c -- conditional probability of Y given X
         maxbeta -- the maximum value of beta to use to compute the curve
         iterations -- number of iterations to use to for the curve to converge for each value of beta
         restarts -- number of times the optimization procedure should be restarted (for each value of beta) from different random initial conditions.
