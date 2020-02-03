@@ -88,14 +88,14 @@ For instance:
 ``` python
 import numpy as np
 from matplotlib import pyplot as plt
-from embo import empirical_bottleneck
+from embo import EmpiricalBottleneck
 
 # data sequences
 x = np.array([0,0,0,1,0,1,0,1,0,1])
 y = np.array([0,1,0,1,0,1,0,1,0,1])
 
 # compute the IB bound from the data
-I_x,I_y,β = EmpiricalBottleneck(x,y).get_empirical_bottleneck()
+I_x,I_y,betas = EmpiricalBottleneck(x,y).get_empirical_bottleneck()
 
 # plot the optimal compression-prediction bound
 plt.plot(I_x,I_y)
