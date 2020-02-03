@@ -48,7 +48,7 @@ are two random variables, we are interested in finding another random
 variable M (called the "bottleneck" variable) that solves the
 following optimisation problem:
 
-min_{p(m|x)}I(M:X) - β I(M:Y)
+$$min_{p(m|x)}I(M:X) - β I(M:Y)$$
 
 for any β>0, and where M is constrained to be independent on
 Y conditional on X:
