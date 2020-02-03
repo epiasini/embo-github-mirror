@@ -10,54 +10,81 @@ np.seterr(divide='ignore', invalid='ignore')
 class EmpiricalBottleneck:
 
     def __init__(self, x, y, window_size_x=1, window_size_y=1, **kwargs):
-        """ Compute an IB curve for two empirical sequences x and y
+        """ Information Bottleneck curve for an empirical dataset (X,Y), given as an observation sequence for X and one for Y.
 
             Arguments:
-            x -- first empirical sequence ("past")
-            y -- second empirical sequence ("future")
+            x -- first empirical observation sequence ("past" if doing past-future bottleneck analysis)
+            y -- second empirical observation sequence ("future")
             window_size_x, window_size_y (int) -- size of the moving windows to be used to compute the IB curve (you typically don't need to worry about this unless you're doing a "past-future bottleneck"-type analysis). The time window on x (which in these cases is typically the "past") is taken backwards, and the time window on y (the "future") is taken forwards. For instance, setting window_size_x=3 and window_size_y=2 will yield the IB curve between (X_{t-2},X_{t-1},X_{t}) and (Y_{t},Y_{t+1}).
             kwargs -- additional keyword arguments to be passed to IB().
 
         """
+
+        self.x = x
+        self.y = y
+        self.window_size_x = window_size_x
+        self.window_size_y = window_size_y
+        self.kwargs_IB = kwargs
+        self.results_ready = False
+
+    def compute_IB_curve(self):
+        """ Compute the IB curve for the joint empirical observations for X and Y. """
+        
         # Marginal, joint and conditional distributions required to calculate the IB
-        pxy_j = p_joint(x, y, window_size_x, window_size_y)
+        pxy_j = p_joint(self.x, self.y, self.window_size_x, self.window_size_y)
         px = pxy_j.sum(axis=1)
         py = pxy_j.sum(axis=0)
         pyx_c = pxy_j.T / px
 
         # Calculate the information bottleneck for a range of values of beta
-        self.i_x, self.i_y, self.beta, self.mixy, self.hx = self.IB(px, py, pyx_c, **kwargs)
+        self.i_x, self.i_y, self.beta, self.mixy, self.hx = self.IB(px, py, pyx_c, **self.kwargs_IB)
         self.hy = entropy(py, base=2)
+
+        # set a flag we will use to call this function automatically when needed
+        self.results_ready = True
 
     def get_empirical_bottleneck(self, return_entropies=False):
         """Return array of ipasts and ifutures for array of different values of beta
          mixy should correspond to the saturation point
          Returns:
-            i_p -- values of ipast for each value of beta
-            i_f -- values of ifuture for each value of beta
+            i_x -- values of I(M:X) for each value of beta
+            i_y -- values of I(M:Y) for each value of beta
             beta -- values of beta considered
-            mixy -- mutual information between x and y (curve saturation point) (only returned if return_entropies is True)
-            hx -- entropy of x (only returned if return_entropies is True)
-            hy -- entropy of y (only returned if return_entropies is True)
+            mixy -- mutual information between X and Y, I(X:Y) (curve saturation point) (only returned if return_entropies is True)
+            hx -- entropy of X (only returned if return_entropies is True)
+            hy -- entropy of Y (only returned if return_entropies is True)
         """
+        if not self.results_ready:
+            self.compute_IB_curve()
+        
         if return_entropies:
             return self.i_x, self.i_y, self.beta, self.mixy, self.hx, self.hy
         else:
             return self.i_x, self.i_y, self.beta
     
     def get_ipast(self):
+        if not self.results_ready:
+            self.compute_IB_curve()
         return self.i_x
 
     def get_ifuture(self):
+        if not self.results_ready:
+            self.compute_IB_curve()
         return self.i_y
 
     def get_beta_values(self):
+        if not self.results_ready:
+            self.compute_IB_curve()
         return self.beta
 
     def get_saturation_point(self):
+        if not self.results_ready:
+            self.compute_IB_curve()
         return self.mixy
 
     def get_entropies(self):
+        if not self.results_ready:
+            self.compute_IB_curve()
         return self.hx, self.hy
 
     @classmethod
@@ -66,15 +93,15 @@ class EmpiricalBottleneck:
 
         Arguments:
         b -- value of beta on which to run algorithm
-        px -- marginal probability distribution for the past (x)
-        py -- marginal probability distribution for the future (y)
+        px -- marginal probability distribution for X ("past")
+        py -- marginal probability distribution for Y ("future")
         pyx_c -- conditional distribution p(y|x)
         pm_size -- discrete size of the compression distribution
         restarts -- number of times the optimization procedure should be restarted (for each value of beta) from different random initial conditions
         iterations -- maximum number of iterations to use until convergence
 
         Returns:
-        list with i_p and i_f, which correspond to ipast and ifuture values for each value of beta
+        list with i_x and i_y, which correspond to I(M:X) and I(M:Y) values for each value of beta
         """
         candidates = []
         for r in range(restarts):
@@ -101,9 +128,9 @@ class EmpiricalBottleneck:
         # value for the functional we're actually minimizing (eq 29 in
         # Tishby et al 2000).
         selected_candidate = min(candidates, key=lambda c: c['functional'])
-        i_p = selected_candidate['past_info']
-        i_f = selected_candidate['future_info']
-        return [i_p, i_f, b]
+        i_x = selected_candidate['past_info']
+        i_y = selected_candidate['future_info']
+        return [i_x, i_y, b]
 
     @classmethod
     def IB(cls, px, py, pyx_c, maxbeta=5, numbeta=30, iterations=100, restarts=3, processes=1):
@@ -113,15 +140,16 @@ class EmpiricalBottleneck:
         px -- marginal probability distribution for X
         py -- marginal probability distribution for Y
         pyx_c -- conditional probability of Y given X
-        maxbeta -- the maximum value of beta to use to compute the curve
+        maxbeta -- the maximum value of beta to use to compute the curve. Minimum is 0.01.
+        numbeta -- the number of (equally-spaced) beta values to consider to compute the curve.
         iterations -- number of iterations to use to for the curve to converge for each value of beta
         restarts -- number of times the optimization procedure should be restarted (for each value of beta) from different random initial conditions.
         processes -- number of cpu threads to run in parallel (default = 1)
 
         Returns:
-        ips -- values of ipast for each beta considered
-        ifs -- values of ifuture for each beta considered
-        bs -- values of beta considered
+        ips -- values of I(M:X) for each beta considered
+        ifs -- values of I(M:Y) for each beta considered
+        bs -- values of beta considered. Note that this does not necessarily match the set of values initially considered (numbeta equally spaced values between 0.01 and maxbeta). As numerical accuracies can lead to to solutions (I(M:X), I(M:Y)) that would make the IB curve nonmonotonic, any such solution (as well as the corresponding beta value) is discarded before returning the results. See utils.compute_upper_bound() for more details.
         mixy -- mutual information between x and y (curve saturation point)
         hx -- entropy of x (maximum ipast value)
         """

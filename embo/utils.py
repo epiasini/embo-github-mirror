@@ -45,7 +45,7 @@ def mi_x1x2_c(px1, px2, px1x2_c):
 
 
 def compute_upper_bound(IX, IY, betas=None):
-    """Extract the upper part of the convex hull of an IB sequence.
+    """Remove all points in an IB sequence that would make it nonmonotonic.
 
     This is a post-processing step that is needed after computing an
     IB sequence (defined as a sequence of (IX, IY) pairs),
@@ -55,17 +55,16 @@ def compute_upper_bound(IX, IY, betas=None):
     Parameters
     ----------
     IX : array
-        I(X) values
+        I(M:X) values
     IY : array 
-        I(Y) values
+        I(M:Y) values
     betas : array (default None)
         beta values from the IB computation
 
     Returns
     -------
     array (n x 2)
-        (I(X), I(Y)) coordinates of the upper part of the convex hull
-        defined by the input points.
+        (I(M:X), I(M:Y)) coordinates of the IB bound after ensuring monotonic progression (with increasing beta) in both coordinates.
     array (n)
         The beta values corresponding to the points of the upper bound.
 

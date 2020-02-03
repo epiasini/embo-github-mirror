@@ -70,16 +70,18 @@ is the maximum accuracy one can have in predicting Y given a certain
 amount of information about X.
 
 ### Using `embo`
-In embo, we assume that the true joint distribution of X and Y is
-not available, and that we only have a set of joint empirical
-observations. We also assume that X and Y both take on a finite
-number of discrete values. In its most basic usage, the
-`empirical_bottleneck` function takes as arguments an array of
-observations for X and an (equally long) array of observations for
-Y, and it returns a set of β values and the
-optimal values of I(M:X) and I(M:Y) corresponding to those
-β. The optimal tradeoff can then be visualised by plotting
-I(M:Y) vs I(M:Y).
+In embo, we assume that the true joint distribution of X and Y is not
+available, and that we only have a set of joint empirical
+observations. We also assume that X and Y both take on a finite number
+of discrete values. The main point of entry to the package is the
+`EmpiricalBottleneck` class. In its constructor, `EmpiricalBottleneck`
+takes as arguments an array of observations for X and an (equally
+long) array of observations for Y, together with other optional
+parameters (see the docstring for details). In the most basic use
+case, users can call the `get_information_bottleneck` method of an
+`EmpiricalBottleneck` object, which will return a set of β values and
+the optimal values of I(M:X) and I(M:Y) corresponding to those β. The
+optimal tradeoff can then be visualised by plotting I(M:Y) vs I(M:Y).
 
 For instance:
 
@@ -93,7 +95,7 @@ x = np.array([0,0,0,1,0,1,0,1,0,1])
 y = np.array([0,1,0,1,0,1,0,1,0,1])
 
 # compute the IB bound from the data
-I_x,I_y,_ = empirical_bottleneck(x,y)
+I_x,I_y,β = EmpiricalBottleneck(x,y).get_empirical_bottleneck()
 
 # plot the optimal compression-prediction bound
 plt.plot(I_x,I_y)
