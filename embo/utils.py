@@ -8,25 +8,26 @@ def p_joint(x1, x2, windowx1=1, windowx2=1):
     """
     Compute the joint distribution between two data series
     
-    x1 = first array
-    x2 = second array
-    windowx1 = moving window size to consider for the x1 array
-    windowx2 = moving window size to consider for the x2 array
+    x1 = first array ("past")
+    x2 = second array ("future")
+    windowx1 = moving window size to consider for the x1 array. As x1 is typically used for the past, this time window is taken backwards, e.g. a window of size 2 means considering {x_{t-1},x_{t}} as a vector-valued sample.
+    windowx2 = moving window size to consider for the x2 array. As x2 is typically used for the future, this time window is taken forwards, e.g. a window of size 2 means considering {x_{t},x_{t+1}} as a vector-valued sample.
     
     return a matrix of the joint probability p(x1,x2)
     """
     x1_unique, x1 = np.unique(x1, return_inverse=True)
     x2_unique, x2 = np.unique(x2, return_inverse=True)
+    assert(len(x1)==len(x2))
+    numsamples = len(x1)
     numuniquex1 = x1_unique.size
     numuniquex2 = x2_unique.size
     numwordsx1 = numuniquex1**windowx1
     numwordsx2 = numuniquex2**windowx2
     aux_base_x1 = numuniquex1**np.arange(windowx1)[::-1]
     aux_base_x2 = numuniquex2**np.arange(windowx2)[::-1]
-    # matrix of size numwordsx, numwordsy with for the joint probability distribution
-    px1x2 = np.zeros((numwordsx1,numwordsx2))
-    for i in range(len(x1)-(windowx1-1)):
-        x1i = np.inner(x1[i:i+windowx1], aux_base_x1).astype(np.int)
+    px1x2 = np.zeros((numwordsx1,numwordsx2)) # matrix of size numwordsx,numwordsy for the joint probability distribution
+    for i in range(windowx1-1, numsamples-(windowx2-1)):
+        x1i = np.inner(x1[i-windowx1+1:i+1], aux_base_x1).astype(np.int)
         x2i = np.inner(x2[i:i+windowx2], aux_base_x2).astype(np.int)
         px1x2[x1i,x2i] += 1
     return px1x2/px1x2.sum()
