@@ -133,13 +133,14 @@ class EmpiricalBottleneck:
         return [i_x, i_y, b]
 
     @classmethod
-    def IB(cls, px, py, pyx_c, maxbeta=5, numbeta=30, iterations=100, restarts=3, processes=1):
+    def IB(cls, px, py, pyx_c, minsize = False, maxbeta=5, numbeta=30, iterations=100, restarts=3, processes=1):
         """Compute an Information Bottleneck curve
 
         Arguments:
         px -- marginal probability distribution for X
         py -- marginal probability distribution for Y
         pyx_c -- conditional probability of Y given X
+        minsize -- if True, maximum size of compression matches smallest codebook size between x and y
         maxbeta -- the maximum value of beta to use to compute the curve. Minimum is 0.01.
         numbeta -- the number of (equally-spaced) beta values to consider to compute the curve.
         iterations -- number of iterations to use to for the curve to converge for each value of beta
@@ -153,8 +154,10 @@ class EmpiricalBottleneck:
         mixy -- mutual information between x and y (curve saturation point)
         hx -- entropy of x (maximum ipast value)
         """
-
-        pm_size = px.size  # Get compression size
+        pm_size = px.size
+	if minsize:
+	    pm_size = min(px.size,py.size)  # Get compression size - smallest size
+        
         bs = np.linspace(0.01, maxbeta, numbeta)  # value of beta
 
         # Parallel computing of compression for desired beta values
