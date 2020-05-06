@@ -155,8 +155,8 @@ class EmpiricalBottleneck:
         hx -- entropy of x (maximum ipast value)
         """
         pm_size = px.size
-	if minsize:
-	    pm_size = min(px.size,py.size)  # Get compression size - smallest size
+        if minsize:
+            pm_size = min(px.size,py.size)  # Get compression size - smallest size
         
         bs = np.linspace(0.01, maxbeta, numbeta)  # value of beta
 
