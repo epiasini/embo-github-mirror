@@ -1,8 +1,6 @@
 from __future__ import division
 
 import numpy as np
-from scipy.stats import entropy
-
 
 def p_joint(x1, x2, windowx1=1, windowx2=1):
     """
@@ -32,17 +30,26 @@ def p_joint(x1, x2, windowx1=1, windowx2=1):
         px1x2[x1i,x2i] += 1
     return px1x2/px1x2.sum()
 
+def entropy(p, axis=0):
+    """Compute entropy (in bits) of the given probability distribution.
 
+    Arguments:
+       p -- distribution for which the entropy is to be computed. This should sum to 1 along the axis of interest.
+       axis -- axins along which to compute the entropy (default: 0)
+    """
+    return np.nansum(-p*np.log2(p), axis=axis)
+
+def kl_divergence(p, q, axis=0):
+    """Compute KL divergence (in bits) between p and q, DKL(P||Q)."""
+    return np.nansum(p * (np.log2(p) - np.log2(q)), axis=axis)
+    
 def mi_x1x2_c(px1, px2, px1x2_c):
     """Compute the MI between two probability distributions x1 and x2
     using their respective marginals and conditional distribution
     """
-    marginal_entropy = entropy(px1, base=2)
-    conditional_entropy = 0.
-    for x2i in range(px2.size):
-        conditional_entropy += px2[x2i] * entropy(px1x2_c[:,x2i], base=2)
+    marginal_entropy = entropy(px1)
+    conditional_entropy = px2 @ entropy(px1x2_c, axis=0)
     return marginal_entropy - conditional_entropy
-
 
 def compute_upper_bound(IX, IY, betas=None):
     """Remove all points in an IB sequence that would make it nonmonotonic.

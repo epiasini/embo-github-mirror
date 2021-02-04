@@ -10,7 +10,7 @@ towards the analysis of concrete, finite-size data sets.
 
 ## Requirements
 
-`embo` requires Python 3, `numpy` and `scipy`.
+`embo` requires Python 3 and `numpy`.
 
 ## Installation
 To install the latest release, run:

@@ -1,11 +1,9 @@
 import numpy as np
 import multiprocessing as mp
 
-from scipy.stats import entropy
-from .utils import p_joint, mi_x1x2_c, compute_upper_bound
+from .utils import p_joint, mi_x1x2_c, compute_upper_bound, kl_divergence, entropy
 
 np.seterr(divide='ignore', invalid='ignore')
-
 
 class EmpiricalBottleneck:
 
@@ -38,7 +36,7 @@ class EmpiricalBottleneck:
 
         # Calculate the information bottleneck for a range of values of beta
         self.i_x, self.i_y, self.beta, self.mixy, self.hx = self.IB(px, py, pyx_c, **self.kwargs_IB)
-        self.hy = entropy(py, base=2)
+        self.hy = entropy(py)
 
         # set a flag we will use to call this function automatically when needed
         self.results_ready = True
@@ -185,7 +183,7 @@ class EmpiricalBottleneck:
 
         # Return saturation point (mixy) and max horizontal axis (hx)
         mixy = mi_x1x2_c(py, px, pyx_c)
-        hx = entropy(px, base=2)
+        hx = entropy(px)
         return ips, ifs, bs, mixy, hx
 
     @staticmethod
@@ -203,15 +201,11 @@ class EmpiricalBottleneck:
         pmx_c -- conditional distribution p(M|X)
         z -- normalizing factor
         """
-
-        pmx_c = np.zeros((pm.size, px.size))  # P(M|X) matrix to be returned
-        for mi in range(pm.size):
-            for xi in range(px.size):
-                pmx_c[mi,xi] = pm[mi] * np.exp(-beta * entropy(pyx_c[:, xi], pym_c[:, mi], base=2))
+        pmx_c = pm[:,np.newaxis] * np.exp(-beta * kl_divergence(pyx_c[:,np.newaxis,:], pym_c[:,:,np.newaxis]))
         z = pmx_c.sum(axis=0)
-        pmx_c /= z  # Normalize
+        pmx_c /= z # normalize
         return pmx_c, z
-
+    
     @staticmethod
     def p_ym_c(pm, px, py, pyx_c, pmx_c):
         """Update conditional distribution of bottleneck variable given y.
@@ -225,12 +219,7 @@ class EmpiricalBottleneck:
         Returns:
         pym_c -- conditional distribution p(Y|M)
         """
-        pym_c = np.zeros((py.size, pm.size))
-        for yi in range(py.size):
-            for mi in range(pm.size):
-                for xi in range(px.size):
-                    pym_c[yi, mi] += (1./pm[mi])*pyx_c[yi, xi]*pmx_c[mi, xi]*px[xi]
-        return pym_c
+        return pyx_c*px @ pmx_c.T/pm
 
     @staticmethod
     def p_m(pmx_c, px):
@@ -243,8 +232,4 @@ class EmpiricalBottleneck:
         Returns:
         pm - marginal distribution of compression p(M)
         """
-        pm = np.zeros(pmx_c.shape[0])
-        for mi in range(pm.size):
-            for xi in range(px.size):
-                pm[mi] += pmx_c[mi, xi]*px[xi]
-        return pm
+        return pmx_c @ px
