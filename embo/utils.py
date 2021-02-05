@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Embo.  If not, see <https://www.gnu.org/licenses/>.
 
-from __future__ import division
-
 import numpy as np
 from scipy.special import entr, rel_entr
 
@@ -25,10 +23,10 @@ def p_joint(x1, x2, windowx1=1, windowx2=1):
     """
     Compute the joint distribution between two data series
     
-    x1 = first array ("past")
-    x2 = second array ("future")
-    windowx1 = moving window size to consider for the x1 array. As x1 is typically used for the past, this time window is taken backwards, e.g. a window of size 2 means considering {x_{t-1},x_{t}} as a vector-valued sample.
-    windowx2 = moving window size to consider for the x2 array. As x2 is typically used for the future, this time window is taken forwards, e.g. a window of size 2 means considering {x_{t},x_{t+1}} as a vector-valued sample.
+    x1 = first array (X, or "past" when doing past-future bottleneck)
+    x2 = second array (Y, or "future")
+    windowx1 = moving window size to consider for the x1 array. As x1 is typically used for the past when doing a past-future bottleneck, this time window is taken backwards, e.g. a window of size 2 means considering {x_{t-1},x_{t}} as a vector-valued sample.
+    windowx2 = moving window size to consider for the x2 array. As x2 is typically used for the future when doing a past-future bottleneck, this time window is taken forwards, e.g. a window of size 2 means considering {x_{t},x_{t+1}} as a vector-valued sample.
     
     return a matrix of the joint probability p(x1,x2)
     """

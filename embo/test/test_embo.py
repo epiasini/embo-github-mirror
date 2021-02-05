@@ -26,9 +26,9 @@ from scipy.stats import entropy as spentropy
 def test_origin(x, y):
     """Check that the IB bound starts at (0,0) for small beta"""
     eb = embo.EmpiricalBottleneck(x, y)
-    i_p = eb.get_ipast()
-    i_f = eb.get_ifuture()
-    np.testing.assert_allclose((i_p[0], i_f[0]), (0,0), rtol=1e-7, atol=1e-9)
+    i_x = eb.get_ix()
+    i_y = eb.get_iy()
+    np.testing.assert_allclose((i_x[0], i_y[0]), (0,0), rtol=1e-7, atol=1e-9)
 
 
 def test_asymptote(x, y):
@@ -39,12 +39,12 @@ def test_asymptote(x, y):
 
     """
     eb = embo.EmpiricalBottleneck(x, y, maxbeta=10)
-    i_p = eb.get_ipast()
-    i_f = eb.get_ifuture()
+    i_x = eb.get_ix()
+    i_y = eb.get_iy()
     mi = eb.get_saturation_point()
     hx, hy = eb.get_entropies()
 
-    np.testing.assert_allclose((i_p[-1], i_f[-1]), (hx, mi), rtol=1e-7)
+    np.testing.assert_allclose((i_x[-1], i_y[-1]), (hx, mi), rtol=1e-7)
 
 
 class TestEntropyFunctions(unittest.TestCase):
@@ -133,6 +133,11 @@ class TestArbitraryAlphabet(unittest.TestCase):
     def test_asymptote(self):
         """Check beta->infinity limit for sequence with arbitrary alphabet"""
         test_asymptote(self.x, self.y)
+
+class TestEmptyInputs(unittest.TestCase):
+    def setUp(self):
+        self.x = np.array([])
+        self.y = np.array([])
 
 
 if __name__ == "__main__":

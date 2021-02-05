@@ -60,7 +60,7 @@ class EmpiricalBottleneck:
         self.results_ready = True
 
     def get_empirical_bottleneck(self, return_entropies=False):
-        """Return array of ipasts and ifutures for array of different values of beta
+        """Return array of I(M:X) and I(M:Y) for array of different values of beta
          mixy should correspond to the saturation point
          Returns:
             i_x -- values of I(M:X) for each value of beta
@@ -78,12 +78,12 @@ class EmpiricalBottleneck:
         else:
             return self.i_x, self.i_y, self.beta
     
-    def get_ipast(self):
+    def get_ix(self):
         if not self.results_ready:
             self.compute_IB_curve()
         return self.i_x
 
-    def get_ifuture(self):
+    def get_iy(self):
         if not self.results_ready:
             self.compute_IB_curve()
         return self.i_y
@@ -109,8 +109,8 @@ class EmpiricalBottleneck:
 
         Arguments:
         b -- value of beta on which to run algorithm
-        px -- marginal probability distribution for X ("past")
-        py -- marginal probability distribution for Y ("future")
+        px -- marginal probability distribution for X
+        py -- marginal probability distribution for Y
         pyx_c -- conditional distribution p(y|x)
         pm_size -- discrete size of the compression distribution
         restarts -- number of times the optimization procedure should be restarted (for each value of beta) from different random initial conditions
@@ -137,15 +137,15 @@ class EmpiricalBottleneck:
                     # if the x->m mapping is not updating any more, we're at convergence and we can stop
                     break
                 pmx_c_old = pmx_c
-            candidates.append({'past_info': mi_x1x2_c(pm, px, pmx_c),
-                               'future_info': mi_x1x2_c(py, pm, pym_c),
+            candidates.append({'info_x': mi_x1x2_c(pm, px, pmx_c),
+                               'info_y': mi_x1x2_c(py, pm, pym_c),
                                'functional': -np.log2(np.inner(z, px))})
         # among the restarts, select the result that gives the minimum
         # value for the functional we're actually minimizing (eq 29 in
         # Tishby et al 2000).
         selected_candidate = min(candidates, key=lambda c: c['functional'])
-        i_x = selected_candidate['past_info']
-        i_y = selected_candidate['future_info']
+        i_x = selected_candidate['info_x']
+        i_y = selected_candidate['info_y']
         return [i_x, i_y, b]
 
     @classmethod
@@ -185,14 +185,14 @@ class EmpiricalBottleneck:
         ifs = [x[1] for x in results]
 
         # Values of beta may not be sorted appropriately.
-        # code below sorts ipast and ifuture according to their corresponding value of beta, and in correct order
+        # code below sorts ix and iy according to their corresponding value of beta, and in correct order
         b_s = [x[2] for x in results]
         ips = [x for _, x in sorted(zip(b_s, ips))]
         ifs = [x for _, x in sorted(zip(b_s, ifs))]
 
         # restrict the returned values to those that, at each value of
-        # beta, actually increase (for Ipast) and do not decrease (for
-        # Ifuture) the information with respect to the previous value of
+        # beta, actually increase (for IX) and do not decrease (for
+        # IY) the information with respect to the previous value of
         # beta. This is to avoid confounds from cases where the AB
         # algorithm gets stuck in a local minimum.
         ub, bs = compute_upper_bound(ips, ifs, bs)

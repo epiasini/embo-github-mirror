@@ -110,8 +110,8 @@ where we compute the Information Bottleneck between the past and the
 future of time series generated from different Markov chains.
 
 ### Further details
-For more details, please consult the docstrings for
-`empirical_bottleneck` and `IB`.
+For more details, please consult the docstrings in
+`EmpiricalBottleneck`.
 
 ## Authors
 `embo` is maintained by Eugenio Piasini, Alexandre Filipowicz and
