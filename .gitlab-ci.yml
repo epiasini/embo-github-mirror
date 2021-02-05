@@ -1,5 +1,5 @@
 test:3.x:
-  image: python:3-stretch
+  image: python:3
   script:
   - apt-get update -qy
   - apt-get install -y python3-pip
