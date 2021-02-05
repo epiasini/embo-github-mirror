@@ -8,3 +8,5 @@ dist
 embo/examples/.ipynb_checkpoints
 .DS_Store
 /.ipynb_checkpoints/
+/.tox/
+/.eggs/

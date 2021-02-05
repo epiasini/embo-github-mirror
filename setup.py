@@ -4,7 +4,7 @@ import codecs
 
 NAME = "embo"
 VERSION_FILE = "VERSION"
-INSTALL_REQUIRES = ["numpy"]
+INSTALL_REQUIRES = ["numpy", "scipy"]
 
 here = os.path.abspath(os.path.dirname(__file__))
 

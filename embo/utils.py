@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+from scipy.special import entr, rel_entr
 
 def p_joint(x1, x2, windowx1=1, windowx2=1):
     """
@@ -34,14 +35,20 @@ def entropy(p, axis=0):
     """Compute entropy (in bits) of the given probability distribution.
 
     Arguments:
-       p -- distribution for which the entropy is to be computed. This should sum to 1 along the axis of interest.
+       p -- distribution for which the entropy is to be computed. This will be normalized to sum to 1 along the axis of interest.
        axis -- axins along which to compute the entropy (default: 0)
     """
-    return np.nansum(-p*np.log2(p), axis=axis)
+    p = np.asarray(p)
+    p = 1.0*p / np.sum(p, axis=axis, keepdims=True)
+    return np.sum(entr(p), axis=axis)/np.log(2)
 
 def kl_divergence(p, q, axis=0):
     """Compute KL divergence (in bits) between p and q, DKL(P||Q)."""
-    return np.nansum(p * (np.log2(p) - np.log2(q)), axis=axis)
+    p = np.asarray(p)
+    p = 1.0*p / np.sum(p, axis=axis, keepdims=True)
+    q = np.asarray(q)
+    q = 1.0*q / np.sum(q, axis=axis, keepdims=True)
+    return np.sum(rel_entr(p,q), axis=axis)/np.log(2)
     
 def mi_x1x2_c(px1, px2, px1x2_c):
     """Compute the MI between two probability distributions x1 and x2

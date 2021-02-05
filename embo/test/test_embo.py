@@ -3,6 +3,7 @@ import numpy as np
 
 import embo
 
+from scipy.stats import entropy as spentropy
 
 def test_origin(x, y):
     """Check that the IB bound starts at (0,0) for small beta"""
@@ -26,6 +27,47 @@ def test_asymptote(x, y):
     hx, hy = eb.get_entropies()
 
     np.testing.assert_allclose((i_p[-1], i_f[-1]), (hx, mi), rtol=1e-7)
+
+
+class TestEntropyFunctions(unittest.TestCase):
+    def setUp(self):
+        self.rng = np.random.default_rng()
+        self.p = np.array([0, 0.3, 0.7])
+        self.q = np.array([0.1, 0.5, 0.4])
+        self.p_unnormalized = 2*self.p
+        # define a collection of 50 unnormalized distributions over 10 states
+        self.p_multiple = self.rng.random((10,50))
+        self.q_multiple = self.rng.random(self.p_multiple.shape)
+
+    def test_entropy_normalized(self):
+        """Check entropy function on one normalized distribution"""
+        np.testing.assert_array_equal(
+            embo.utils.entropy(self.p),
+            spentropy(self.p, base=2))
+
+    def test_entropy_unnormalized(self):
+        """Check entropy function on one unnormalized distribution"""
+        np.testing.assert_array_equal(
+            embo.utils.entropy(self.p_unnormalized),
+            spentropy(self.p_unnormalized, base=2))
+
+    def test_kl(self):
+        """Check KL divergence between two single distributions"""
+        np.testing.assert_array_equal(
+            embo.utils.kl_divergence(self.p, self.q),
+            spentropy(self.p, self.q, base=2))
+    
+    def test_entropy_multiple(self):
+        """Check entropy for multiple distributions"""
+        np.testing.assert_array_equal(
+            embo.utils.entropy(self.p_multiple),
+            spentropy(self.p_multiple, base=2))
+
+    def test_kl_multiple(self):
+        """Check KL divergence between multiple distributions"""
+        np.testing.assert_array_equal(
+            embo.utils.kl_divergence(self.p_multiple, self.q_multiple),
+            spentropy(self.p_multiple, self.q_multiple, base=2))
 
 
 class TestBinarySequence(unittest.TestCase):
