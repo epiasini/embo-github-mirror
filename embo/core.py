@@ -36,12 +36,14 @@ class EmpiricalBottleneck:
 
         """
 
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x)
+        self.y = np.asarray(y)
         self.window_size_x = window_size_x
         self.window_size_y = window_size_y
         self.kwargs_IB = kwargs
         self.results_ready = False
+        if not (np.all(np.isfinite(self.x)) and np.all(np.isfinite(self.y))):
+            raise ValueError("The observation data contains NaNs or Infs.")
 
     def compute_IB_curve(self):
         """ Compute the IB curve for the joint empirical observations for X and Y. """
