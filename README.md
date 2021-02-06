@@ -10,7 +10,7 @@ towards the analysis of concrete, finite-size data sets.
 
 ## Requirements
 
-`embo` requires Python 3 and `numpy`.
+`embo` requires Python 3, `numpy>=1.7` and `scipy`.
 
 ## Installation
 To install the latest release, run:
@@ -26,17 +26,8 @@ system, look for the copy of the `test_embo.py` script installed
 alongside the rest of the `embo` files and execute it. For example:
 
 ``` bash
-python /usr/lib/python3.X/site-packages/embo/test_embo.py
+python /usr/lib/python3.X/site-packages/embo/test/test_embo.py
 ```
-
-**Alternatively**, if you have downloaded the source, from within the
-root folder of the source distribution run:
-
-``` bash
-python setup.py test
-```
-
-This should run through all tests specified in `embo/test`.
 
 ## Usage
 
