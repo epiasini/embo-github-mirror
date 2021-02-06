@@ -101,14 +101,14 @@ class TestBinarySequence(unittest.TestCase):
         self.xycorr = np.zeros_like(rand)
         for cp in cumprobs[:-1]:
             self.xycorr[rand>=cp] += 1
-        self.xcorr = np.zeros_like(self.xycorr, dtype=np.float)
-        self.ycorr = np.zeros_like(self.xycorr, dtype=np.float)
+        self.xcorr = np.zeros_like(self.xycorr, dtype=float)
+        self.ycorr = np.zeros_like(self.xycorr, dtype=float)
         self.xcorr[np.logical_or(self.xycorr==2, self.xycorr==3)] = 1
         self.ycorr[np.logical_or(self.xycorr==1, self.xycorr==3)] = 1
 
-        self.x_with_nan = np.copy(self.x).astype(np.float)
+        self.x_with_nan = np.copy(self.x).astype(float)
         self.x_with_nan[-1] = np.NaN
-        self.x_with_inf = np.copy(self.x).astype(np.float)
+        self.x_with_inf = np.copy(self.x).astype(float)
         self.x_with_inf[-1] = np.Inf
         self.empty = np.array([])
 
@@ -158,7 +158,7 @@ class TestUpperBound(unittest.TestCase):
     def setUp(self):
         self.a = np.array([[0, 0], [1, 1], [2, 0], [3, 3], [3, 4], [2, 5], [4, 6], [2, 7], [3, 8]])
         self.betas = np.arange(self.a.shape[0])
-        self.true_idxs = np.array([0, 1, 3, 6], dtype=np.int)
+        self.true_idxs = np.array([0, 1, 3, 6], dtype=int)
 
     def test_upper_bound(self):
         """Check extraction of upper bound in IB space"""

@@ -42,8 +42,8 @@ def p_joint(x1, x2, windowx1=1, windowx2=1):
     aux_base_x2 = numuniquex2**np.arange(windowx2)[::-1]
     px1x2 = np.zeros((numwordsx1,numwordsx2)) # matrix of size numwordsx,numwordsy for the joint probability distribution
     for i in range(windowx1-1, numsamples-(windowx2-1)):
-        x1i = np.inner(x1[i-windowx1+1:i+1], aux_base_x1).astype(np.int)
-        x2i = np.inner(x2[i:i+windowx2], aux_base_x2).astype(np.int)
+        x1i = np.inner(x1[i-windowx1+1:i+1], aux_base_x1).astype(int)
+        x2i = np.inner(x2[i:i+windowx2], aux_base_x2).astype(int)
         px1x2[x1i,x2i] += 1
     return px1x2/px1x2.sum()
 
