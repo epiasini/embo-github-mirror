@@ -25,13 +25,14 @@ np.seterr(divide='ignore', invalid='ignore')
 
 class EmpiricalBottleneck:
 
-    def __init__(self, x, y, window_size_x=1, window_size_y=1, **kwargs):
+    def __init__(self, x=None, y=None, window_size_x=1, window_size_y=1, pxy=None, **kwargs):
         """ Information Bottleneck curve for an empirical dataset (X,Y), given as an observation sequence for X and one for Y.
 
             Arguments:
             x -- first empirical observation sequence ("past" if doing past-future bottleneck analysis)
             y -- second empirical observation sequence ("future")
             window_size_x, window_size_y (int) -- size of the moving windows to be used to compute the IB curve (you typically don't need to worry about this unless you're doing a "past-future bottleneck"-type analysis). The time window on x (which in these cases is typically the "past") is taken backwards, and the time window on y (the "future") is taken forwards. For instance, setting window_size_x=3 and window_size_y=2 will yield the IB curve between (X_{t-2},X_{t-1},X_{t}) and (Y_{t},Y_{t+1}).
+            pxy -- joint probability distribution of X and Y. This is a numpy array such that pxy_j[xi,xi] is the joint probability of the xi-th value of X and the yi-th value of Y. If the array does not sum to one, it will be normalized to ensure that it does. If this argument is passed, the joint estimation step will be skipped; therefore it can only be passed if x and y are None.
             kwargs -- additional keyword arguments to be passed to IB().
 
         """
@@ -42,17 +43,29 @@ class EmpiricalBottleneck:
         self.window_size_y = window_size_y
         self.kwargs_IB = kwargs
         self.results_ready = False
-        if not (np.all(np.isfinite(self.x)) and np.all(np.isfinite(self.y))):
+        if (x is not None and not np.all(np.isfinite(self.x))) or\
+           (y is not None and not np.all(np.isfinite(self.y))):
             raise ValueError("The observation data contains NaNs or Infs.")
+        if pxy is not None and (x is not None or y is not None):
+            raise ValueError("It is not possible to specify both pxy_j.")
+        if pxy is None and (x is None or y is None):
+            raise ValueError("Eiter pxy or x and y should be specified.")
+        self.pxy_j = pxy
+        if self.pxy_j is not None:
+            if not np.all(self.pxy_j>=0):
+                raise ValueError("Negative values in the specified joint p(X,Y).")
+            self.pxy_j /= 1.0*self.pxy_j.sum()
 
     def compute_IB_curve(self):
         """ Compute the IB curve for the joint empirical observations for X and Y. """
         
         # Marginal, joint and conditional distributions required to calculate the IB
-        pxy_j = p_joint(self.x, self.y, self.window_size_x, self.window_size_y)
-        px = pxy_j.sum(axis=1)
-        py = pxy_j.sum(axis=0)
-        pyx_c = pxy_j.T / px
+        if self.pxy_j is None:
+            self.pxy_j = p_joint(self.x, self.y, self.window_size_x, self.window_size_y)
+
+        px = self.pxy_j.sum(axis=1)
+        py = self.pxy_j.sum(axis=0)
+        pyx_c = self.pxy_j.T / px
 
         # Calculate the information bottleneck for a range of values of beta
         self.i_x, self.i_y, self.beta, self.mixy, self.hx = self.IB(px, py, pyx_c, **self.kwargs_IB)
