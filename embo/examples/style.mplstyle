@@ -1,0 +1,13 @@
+font.sans-serif : Arial
+font.size : 8
+figure.figsize : 2.5, 1.545
+figure.constrained_layout.use : True
+figure.dpi : 150
+axes.spines.top : False
+axes.spines.right : False
+savefig.dpi : 300
+axes.prop_cycle : cycler('color', ['4D4D4D', '5DA5DA', 'FAA43A', '60BD68', 'F17CB0', 'B2912F', 'B276B2', 'DECF3F', 'F15854'])
+lines.markeredgecolor : black
+xtick.color : black
+ytick.color : black
+lines.markeredgewidth : 0.4
