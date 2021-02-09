@@ -25,12 +25,13 @@ np.seterr(divide='ignore', invalid='ignore')
 
 class EmpiricalBottleneck:
 
-    def __init__(self, x=None, y=None, window_size_x=1, window_size_y=1, pxy=None, **kwargs):
+    def __init__(self, x=None, y=None, alpha=1, window_size_x=1, window_size_y=1, pxy=None, **kwargs):
         """ Information Bottleneck curve for an empirical dataset (X,Y), given as an observation sequence for X and one for Y.
 
             Arguments:
             x -- first empirical observation sequence ("past" if doing past-future bottleneck analysis)
             y -- second empirical observation sequence ("future")
+            alpha -- generalized bottleneck parameter: alpha=1 is IB and alpha=0 is DIB (deterministic bottleneck)
             window_size_x, window_size_y (int) -- size of the moving windows to be used to compute the IB curve (you typically don't need to worry about this unless you're doing a "past-future bottleneck"-type analysis). The time window on x (which in these cases is typically the "past") is taken backwards, and the time window on y (the "future") is taken forwards. For instance, setting window_size_x=3 and window_size_y=2 will yield the IB curve between (X_{t-2},X_{t-1},X_{t}) and (Y_{t},Y_{t+1}).
             pxy -- joint probability distribution of X and Y. This is a numpy array such that pxy_j[xi,xi] is the joint probability of the xi-th value of X and the yi-th value of Y. If the array does not sum to one, it will be normalized to ensure that it does. If this argument is passed, the joint estimation step will be skipped; therefore it can only be passed if x and y are None.
             kwargs -- additional keyword arguments to be passed to IB().
@@ -39,6 +40,7 @@ class EmpiricalBottleneck:
 
         self.x = np.asarray(x)
         self.y = np.asarray(y)
+        self.alpha = alpha
         self.window_size_x = window_size_x
         self.window_size_y = window_size_y
         self.kwargs_IB = kwargs
@@ -68,7 +70,7 @@ class EmpiricalBottleneck:
         pyx_c = self.pxy_j.T / px
 
         # Calculate the information bottleneck for a range of values of beta
-        self.i_x, self.i_y, self.beta, self.mixy, self.hx = self.IB(px, py, pyx_c, **self.kwargs_IB)
+        self.i_x, self.i_y, self.h_m, self.beta, self.mixy, self.hx = self.IB(px, py, pyx_c, self.alpha, **self.kwargs_IB)
         self.hy = entropy(py)
 
         # set a flag we will use to call this function automatically when needed
@@ -80,6 +82,7 @@ class EmpiricalBottleneck:
          Returns:
             i_x -- values of I(M:X) for each value of beta
             i_y -- values of I(M:Y) for each value of beta
+            h_m -- values of H(M) for each value of beta
             beta -- values of beta considered
             mixy -- mutual information between X and Y, I(X:Y) (curve saturation point) (only returned if return_entropies is True)
             hx -- entropy of X (only returned if return_entropies is True)
@@ -89,9 +92,9 @@ class EmpiricalBottleneck:
             self.compute_IB_curve()
         
         if return_entropies:
-            return self.i_x, self.i_y, self.beta, self.mixy, self.hx, self.hy
+            return self.i_x, self.i_y, self.h_m, self.beta, self.mixy, self.hx, self.hy
         else:
-            return self.i_x, self.i_y, self.beta
+            return self.i_x, self.i_y, self.h_m, self.beta
     
     def get_ix(self):
         if not self.results_ready:
@@ -119,21 +122,26 @@ class EmpiricalBottleneck:
         return self.hx, self.hy
 
     @classmethod
-    def beta_iter(cls, b, px, py, pyx_c, pm_size, restarts, iterations):
+    def beta_iter(cls, a, b, px, py, pyx_c, pm_size, restarts, iterations, rtol=1e-3, atol=None):
         """Function to run BA algorithm for individual values of beta
 
         Arguments:
+        a -- value of alpha defining the generalized bottleneck (a=1 is IB, a=0 is DIB)
         b -- value of beta on which to run algorithm
         px -- marginal probability distribution for X
         py -- marginal probability distribution for Y
         pyx_c -- conditional distribution p(y|x)
         pm_size -- discrete size of the compression distribution
         restarts -- number of times the optimization procedure should be restarted (for each value of beta) from different random initial conditions
-        iterations -- maximum number of iterations to use until convergence
+        iterations -- maximum number of iterations to perform
+        rtol, atol -- relative and absolute tolerances on the cost function to determine when the algorithm has converged
 
         Returns:
         list with i_x and i_y, which correspond to I(M:X) and I(M:Y) values for each value of beta
         """
+        if atol is None:
+            # setting atol>0 helps with underflow when 0<alpha<<1, but can default to zero otherwise
+            atol = 0 if a==0 or a==1 else 1e-20
         candidates = []
         for r in range(restarts):
 
@@ -145,32 +153,42 @@ class EmpiricalBottleneck:
 
             # Iterate the BA algorithm
             for i in range(iterations):
-                pmx_c, z = cls.p_mx_c(pm, px, py, pyx_c, pym_c, b)
-                pm = cls.p_m(pmx_c,px)
-                pym_c = cls.p_ym_c(pm, px, py, pyx_c, pmx_c)
-                if i > 0 and np.allclose(pmx_c, pmx_c_old, rtol=1e-3, atol=1e-3):
-                    # if the x->m mapping is not updating any more, we're at convergence and we can stop
+                pmx_c, z = p_mx_c(pm, px, pyx_c, pym_c, a, b)
+                pm = p_m(pmx_c,px)
+                pym_c = p_ym_c(pm, px, pyx_c, pmx_c)
+                # compute cost: H(M)-αH(M|X)-βI(M:Y)
+                if a==1:
+                    # specialized efficient form for the regular IΒ (equivalent to the formula below, but faster)
+                    cost = -px @ np.log(z)
+                else:
+                    # generalized bottleneck
+                    cost = entropy(pm) - a * px @ entropy(pmx_c, axis=0) - b * mi_x1x2_c(py, pm, pym_c)
+                if i > 0 and np.allclose(cost, cost_old, rtol=rtol, atol=atol):
+                    # if the cost function is not changing any more, we're at convergence and we can stop
                     break
-                pmx_c_old = pmx_c
+                cost_old = cost
             candidates.append({'info_x': mi_x1x2_c(pm, px, pmx_c),
                                'info_y': mi_x1x2_c(py, pm, pym_c),
-                               'functional': -np.log2(np.inner(z, px))})
+                               'entropy_m' : entropy(pm),
+                               'cost': cost})
         # among the restarts, select the result that gives the minimum
         # value for the functional we're actually minimizing (eq 29 in
         # Tishby et al 2000).
-        selected_candidate = min(candidates, key=lambda c: c['functional'])
+        selected_candidate = min(candidates, key=lambda c: c['cost'])
         i_x = selected_candidate['info_x']
         i_y = selected_candidate['info_y']
-        return [i_x, i_y, b]
+        h_m = selected_candidate['entropy_m']
+        return [i_x, i_y, h_m, b]
 
     @classmethod
-    def IB(cls, px, py, pyx_c, minsize = False, maxbeta=5, numbeta=30, iterations=100, restarts=3, processes=1):
+    def IB(cls, px, py, pyx_c, alpha=1, minsize = False, maxbeta=5, numbeta=30, iterations=100, restarts=3, processes=1):
         """Compute an Information Bottleneck curve
 
         Arguments:
         px -- marginal probability distribution for X
         py -- marginal probability distribution for Y
         pyx_c -- conditional probability of Y given X
+        alpha -- generalized bottleneck parameter: alpha=1 is IB, alpha=0 is DIB
         minsize -- if True, maximum size of compression matches smallest codebook size between x and y
         maxbeta -- the maximum value of beta to use to compute the curve. Minimum is 0.01.
         numbeta -- the number of (equally-spaced) beta values to consider to compute the curve.
@@ -181,9 +199,10 @@ class EmpiricalBottleneck:
         Returns:
         ips -- values of I(M:X) for each beta considered
         ifs -- values of I(M:Y) for each beta considered
+        hms -- values of H(M) for each beta considered
         bs -- values of beta considered. Note that this does not necessarily match the set of values initially considered (numbeta equally spaced values between 0.01 and maxbeta). As numerical accuracies can lead to to solutions (I(M:X), I(M:Y)) that would make the IB curve nonmonotonic, any such solution (as well as the corresponding beta value) is discarded before returning the results. See utils.compute_upper_bound() for more details.
         mixy -- mutual information between x and y (curve saturation point)
-        hx -- entropy of x (maximum ipast value)
+        hx -- entropy of x (maximum I(M:X) value)
         """
         pm_size = px.size
         if minsize:
@@ -193,76 +212,99 @@ class EmpiricalBottleneck:
 
         # Parallel computing of compression for desired beta values
         pool = mp.Pool(processes=processes)
-        results = [pool.apply_async(cls.beta_iter, args=(b, px, py, pyx_c, pm_size, restarts, iterations,)) for b in bs]
+        results = [pool.apply_async(cls.beta_iter, args=(alpha, b, px, py, pyx_c, pm_size, restarts, iterations,)) for b in bs]
         pool.close()
         results = [p.get() for p in results]
         ips = [x[0] for x in results]
         ifs = [x[1] for x in results]
+        hms = [x[2] for x in results]
 
         # Values of beta may not be sorted appropriately.
         # code below sorts ix and iy according to their corresponding value of beta, and in correct order
-        b_s = [x[2] for x in results]
-        ips = [x for _, x in sorted(zip(b_s, ips))]
-        ifs = [x for _, x in sorted(zip(b_s, ifs))]
+        bs = [x[3] for x in results]
+        ips = [x for _, x in sorted(zip(bs, ips))]
+        ifs = [x for _, x in sorted(zip(bs, ifs))]
+        hms = [x for _, x in sorted(zip(bs, hms))]
 
         # restrict the returned values to those that, at each value of
         # beta, actually increase (for IX) and do not decrease (for
         # IY) the information with respect to the previous value of
         # beta. This is to avoid confounds from cases where the AB
         # algorithm gets stuck in a local minimum.
-        ub, bs = compute_upper_bound(ips, ifs, bs)
-        ips = np.squeeze(ub[:, 0])
-        ifs = np.squeeze(ub[:, 1])
+        if alpha > 0:
+            # If alpha > 0, we ensure monotonicity in the IB plane
+            ub, idxs = compute_upper_bound(ips, ifs)
+            ips = np.squeeze(ub[:, 0])
+            ifs = np.squeeze(ub[:, 1])
+            hms = np.array(hms)[idxs]
+            bs = np.array(bs)[idxs]
+        elif alpha==0:
+            # If alpha==0, we ensure monotonicity in the DIB plane
+            ub, idxs = compute_upper_bound(hms, ifs)
+            ips = np.squeeze(ub[:, 0])
+            hms = np.squeeze(ub[:, 1])
+            ifs = np.array(ifs)[idxs]
+            bs = np.array(bs)[idxs]
 
         # Return saturation point (mixy) and max horizontal axis (hx)
         mixy = mi_x1x2_c(py, px, pyx_c)
         hx = entropy(px)
-        return ips, ifs, bs, mixy, hx
+        return ips, ifs, hms, bs, mixy, hx
 
-    @staticmethod
-    def p_mx_c(pm, px, py, pyx_c, pym_c, beta):
-        """Update conditional distribution of bottleneck random variable given x.
+def elementwise_l(pm, px, pyx_c, pym_c, alpha, beta):
+    return (np.log(pm[:,np.newaxis]) - beta * kl_divergence(pyx_c[:,np.newaxis,:], pym_c[:,:,np.newaxis]))/alpha
 
-        Arguments:
-        pm -- marginal distribution p(M) - vector
-        px -- marginal distribution p(X) - vector
-        py -- marginal distribution p(Y) - vector
-        pyx_c -- conditional distribution p(Y|X) - matrix
-        pym_c -- conditional distribution p(Y|M) - matrix
+def p_mx_c(pm, px, pyx_c, pym_c, alpha, beta):
+    """Update conditional distribution of bottleneck random variable given x.
 
-        Returns:
-        pmx_c -- conditional distribution p(M|X)
-        z -- normalizing factor
-        """
-        pmx_c = pm[:,np.newaxis] * np.exp(-beta * kl_divergence(pyx_c[:,np.newaxis,:], pym_c[:,:,np.newaxis]))
+    Arguments:
+    pm -- marginal distribution p(M) - vector
+    px -- marginal distribution p(X) - vector
+    pyx_c -- conditional distribution p(Y|X) - matrix
+    pym_c -- conditional distribution p(Y|M) - matrix
+    alpha -- H(M|X) weight: alpha=1 is IB, alpha=0 is DIB
+    beta -- I(M:Y) weight
+
+    Returns:
+    pmx_c -- conditional distribution p(M|X) (encoder)
+    z -- normalizing factor
+    """
+    if alpha > 0:
+        pmx_c = np.exp(elementwise_l(pm, px, pyx_c, pym_c, alpha, beta))
         z = pmx_c.sum(axis=0)
         pmx_c /= z # normalize
-        return pmx_c, z
-    
-    @staticmethod
-    def p_ym_c(pm, px, py, pyx_c, pmx_c):
-        """Update conditional distribution of bottleneck variable given y.
+    elif alpha==0:
+        l = elementwise_l(pm, px, pyx_c, pym_c, 1, beta)
+        pmx_c = np.zeros_like(l)
+        pmx_c[np.argmax(l, axis=0), np.arange(l.shape[1])] = 1
+        z = 1
+    return pmx_c, z
 
-        Arguments:
-        pm -- Marginal distribution p(M)
-        px -- marginal distribution p(X)
-        pyx_c -- conditional distribution p(Y|X)
-        pmx_c -- conditional distribution p(M|X)
+def p_ym_c(pm, px, pyx_c, pmx_c):
+    """Update conditional distribution of bottleneck variable given y.
 
-        Returns:
-        pym_c -- conditional distribution p(Y|M)
-        """
-        return pyx_c*px @ pmx_c.T/pm
+    Arguments:
+    pm -- Marginal distribution p(M)
+    px -- marginal distribution p(X)
+    pyx_c -- conditional distribution p(Y|X)
+    pmx_c -- conditional distribution p(M|X)
 
-    @staticmethod
-    def p_m(pmx_c, px):
-        """Update marginal distribution of bottleneck variable.
+    Returns:
+    pym_c -- conditional distribution p(Y|M)
+    """
+    pym = pyx_c*px[np.newaxis,:] @ pmx_c.T
+    pym_c = pym / pm[np.newaxis,:]
+    pym_c[pym==0] = 0
+    return pym_c
 
-        Arguments:
-        pmx_c -- conditional distribution p(M|X)
-        px -- marginal distribution p(X)
+def p_m(pmx_c, px):
+    """Update marginal distribution of bottleneck variable.
 
-        Returns:
-        pm - marginal distribution of compression p(M)
-        """
-        return pmx_c @ px
+    Arguments:
+    pmx_c -- conditional distribution p(M|X)
+    px -- marginal distribution p(X)
+
+    Returns:
+    pm - marginal distribution of compression p(M)
+    """
+    return pmx_c @ px

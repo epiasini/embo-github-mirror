@@ -132,9 +132,10 @@ class TestBinarySequence(unittest.TestCase):
     def test_empty_arrays(self):
         """Check that computing the IB on a pair of empty arrays just returns zero"""
         eb = embo.EmpiricalBottleneck(self.empty, self.empty)
-        i_x, i_y, _, mixy, hx, hy = eb.get_empirical_bottleneck(return_entropies=True)
+        i_x, i_y, h_m, _, mixy, hx, hy = eb.get_empirical_bottleneck(return_entropies=True)
         np.testing.assert_equal(i_x, np.zeros(1))
         np.testing.assert_equal(i_y, np.zeros(1))
+        np.testing.assert_equal(h_m, np.zeros(1))
         np.testing.assert_equal(mixy, np.zeros(1))
         np.testing.assert_equal(hx, np.zeros(1))
         np.testing.assert_equal(hy, np.zeros(1))
@@ -162,12 +163,13 @@ class TestUpperBound(unittest.TestCase):
 
     def test_upper_bound(self):
         """Check extraction of upper bound in IB space"""
-        u = embo.compute_upper_bound(self.a[:, 0], self.a[:, 1])
+        u, _  = embo.compute_upper_bound(self.a[:, 0], self.a[:, 1])
         np.testing.assert_array_equal(u, self.a[self.true_idxs, :])
 
     def test_betas(self):
         """Check extraction of beta values related to upper bound in IB space"""
-        u, betas = embo.compute_upper_bound(self.a[:,0], self.a[:,1], self.betas)
+        u, idxs = embo.compute_upper_bound(self.a[:,0], self.a[:,1])
+        betas = self.betas[idxs]
         np.testing.assert_array_equal(betas, self.betas[self.true_idxs])
 
 

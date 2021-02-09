@@ -70,11 +70,11 @@ def mi_x1x2_c(px1, px2, px1x2_c):
     """Compute the MI between two probability distributions x1 and x2
     using their respective marginals and conditional distribution
     """
-    marginal_entropy = entropy(px1)
-    conditional_entropy = px2 @ entropy(px1x2_c, axis=0)
-    return marginal_entropy - conditional_entropy
+    px1x2 = px1x2_c * px2[np.newaxis,:]
+    px1px2 = px1[:,np.newaxis] * px2[np.newaxis,:]
+    return kl_divergence(px1x2, px1px2, axis=None)
 
-def compute_upper_bound(IX, IY, betas=None):
+def compute_upper_bound(IX, IY):
     """Remove all points in an IB sequence that would make it nonmonotonic.
 
     This is a post-processing step that is needed after computing an
@@ -88,15 +88,13 @@ def compute_upper_bound(IX, IY, betas=None):
         I(M:X) values
     IY : array 
         I(M:Y) values
-    betas : array (default None)
-        beta values from the IB computation
 
     Returns
     -------
     array (n x 2)
         (I(M:X), I(M:Y)) coordinates of the IB bound after ensuring monotonic progression (with increasing beta) in both coordinates.
-    array (n)
-        The beta values corresponding to the points of the upper bound.
+    array ()
+        The indices of the points selected to ensure monotonic progression
 
     """
     points = np.vstack((IX,IY)).T
@@ -108,8 +106,5 @@ def compute_upper_bound(IX, IY, betas=None):
             
     upper_bound = points[selected_idxs, :]
 
-    if betas is None:        
-        return upper_bound
-    else:
-        return upper_bound, betas[selected_idxs]
+    return upper_bound, selected_idxs
 
