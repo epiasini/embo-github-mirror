@@ -232,26 +232,28 @@ class EmpiricalBottleneck:
         bs = np.linspace(minbeta, maxbeta, numbeta)  # value of beta
 
         # Parallel computing of compression for desired beta values
-        pool = mp.Pool(processes=processes)
-        results = [pool.apply_async(cls.beta_iter, args=(alpha, b, px, py, pyx_c, pm_size, restarts, iterations,rtol)) for b in bs]
-        pool.close()
-        results = [p.get() for p in results]
+        with mp.Pool(processes=processes) as pool:
+            results = [pool.apply_async(cls.beta_iter, args=(alpha, b, px, py, pyx_c, pm_size, restarts, iterations,rtol)) for b in bs]
+            results = [p.get() for p in results]
         ips = [x[0] for x in results]
         ifs = [x[1] for x in results]
         hms = [x[2] for x in results]
-
-        # Values of beta may not be sorted appropriately.
-        # code below sorts ix and iy according to their corresponding value of beta, and in correct order
         bs = [x[3] for x in results]
+
+        # Values of beta may not be sorted appropriately due to out-of
+        # order execution if using many processes. So we have so sort
+        # the result lists (ix, iy, hm, beta) in ascending beta order.
         ips = [x for _, x in sorted(zip(bs, ips))]
         ifs = [x for _, x in sorted(zip(bs, ifs))]
         hms = [x for _, x in sorted(zip(bs, hms))]
+        bs = sorted(bs)
 
         # restrict the returned values to those that, at each value of
-        # beta, actually increase (for IX) and do not decrease (for
-        # IY) the information with respect to the previous value of
-        # beta. This is to avoid confounds from cases where the AB
-        # algorithm gets stuck in a local minimum.
+        # beta, actually increase (for I(M:X) or H(M)) and do not
+        # decrease (for I(M:Y)) the information/entropy with respect
+        # to the previous value of beta. This is to avoid confounds
+        # from cases where the AB algorithm gets stuck in a local
+        # minimum.
         if ensure_monotonic_bound:
             if ensure_monotonic_bound=='auto':
                 if alpha==1:
