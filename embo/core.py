@@ -49,14 +49,16 @@ class EmpiricalBottleneck:
            (y is not None and not np.all(np.isfinite(self.y))):
             raise ValueError("The observation data contains NaNs or Infs.")
         if pxy is not None and (x is not None or y is not None):
-            raise ValueError("It is not possible to specify both pxy_j.")
-        if pxy is None and (x is None or y is None):
-            raise ValueError("Eiter pxy or x and y should be specified.")
+            raise ValueError("It is not possible to specify both pxy and the empirical data x,y.")
         self.pxy_j = pxy
         if self.pxy_j is not None:
             if not np.all(self.pxy_j>=0):
                 raise ValueError("Negative values in the specified joint p(X,Y).")
             self.pxy_j /= 1.0*self.pxy_j.sum()
+        elif x is None or y is None:
+            raise ValueError("Eiter pxy or x and y should be specified.")
+        elif len(x)==0 or len(y)==0:
+            raise ValueError("If pxy is not specified, x and y can't be empty.")
 
     def compute_IB_curve(self):
         """ Compute the IB curve for the joint empirical observations for X and Y. """
@@ -105,6 +107,11 @@ class EmpiricalBottleneck:
         if not self.results_ready:
             self.compute_IB_curve()
         return self.i_y
+
+    def get_hm(self):
+        if not self.results_ready:
+            self.compute_IB_curve()
+        return self.h_m
 
     def get_beta_values(self):
         if not self.results_ready:
