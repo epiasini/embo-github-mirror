@@ -93,10 +93,10 @@ from embo import EmpiricalBottleneck
 x = np.array([0,0,0,1,0,1,0,1,0,1])
 y = np.array([0,1,0,1,0,1,0,1,0,1])
 
-# compute the IB bound from the data
+# compute the IB bound from the data (vanilla IB; Tishby et al 2001)
 I_x,I_y,H_m,β = EmpiricalBottleneck(x,y).get_empirical_bottleneck()
 
-# plot the IB bound (vanilla IB; Tishby et al 2001)
+# plot the IB bound
 plt.plot(I_x,I_y)
 ```
 
@@ -119,7 +119,7 @@ The deterministic and generalised bottleneck can be computed by
 setting appropriately the parameter `alpha`:
 
 ``` python
-# compute Deterministic Information Bottleneck
+# compute Deterministic Information Bottleneck (Strouse 2016)
 I_x,I_y,H_m,β = EmpiricalBottleneck(pxy=pxy, alpha=0).get_empirical_bottleneck()
 
 # plot I(M:Y) vs H(M)
