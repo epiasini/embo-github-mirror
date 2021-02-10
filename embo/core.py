@@ -1,7 +1,7 @@
 # Copyright (C) 2020,2021 Eugenio Piasini, Alexandre Filipowicz,
 # Jonathan Levine.
 #
-# This file is part of embo.
+# This file is part of Embo.
 #
 # Embo is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@ np.seterr(divide='ignore', invalid='ignore')
 class EmpiricalBottleneck:
 
     def __init__(self, x=None, y=None, alpha=1, window_size_x=1, window_size_y=1, pxy=None, **kwargs):
-        """ Information Bottleneck curve for an empirical dataset (X,Y), given as an observation sequence for X and one for Y.
+        """ Information Bottleneck analysis for an empirical dataset (x,y) or a joint probability mass function pxy.
 
             Arguments:
             x -- first empirical observation sequence ("past" if doing past-future bottleneck analysis)
             y -- second empirical observation sequence ("future")
             alpha -- generalized bottleneck parameter: alpha=1 is IB and alpha=0 is DIB (deterministic bottleneck)
             window_size_x, window_size_y (int) -- size of the moving windows to be used to compute the IB curve (you typically don't need to worry about this unless you're doing a "past-future bottleneck"-type analysis). The time window on x (which in these cases is typically the "past") is taken backwards, and the time window on y (the "future") is taken forwards. For instance, setting window_size_x=3 and window_size_y=2 will yield the IB curve between (X_{t-2},X_{t-1},X_{t}) and (Y_{t},Y_{t+1}).
-            pxy -- joint probability distribution of X and Y. This is a numpy array such that pxy_j[xi,xi] is the joint probability of the xi-th value of X and the yi-th value of Y. If the array does not sum to one, it will be normalized to ensure that it does. If this argument is passed, the joint estimation step will be skipped; therefore it can only be passed if x and y are None.
+            pxy -- joint probability distribution of X and Y. This is a numpy array such that pxy[xi,yi] is the joint probability of the xi-th value of X and the yi-th value of Y. If the array does not sum to one, it will be normalized to ensure that it does. If this argument is passed, the joint estimation step will be skipped; therefore it can only be passed if x and y are None.
             kwargs -- additional keyword arguments to be passed to IB().
 
         """
@@ -176,7 +176,9 @@ class EmpiricalBottleneck:
                 pm, pmx_c, pym_c = drop_unused_dimensions(pm, pmx_c, pym_c)
                 # compute cost: H(M)-αH(M|X)-βI(M:Y)
                 if a==1:
-                    # specialized efficient form for the regular IΒ (equivalent to the formula below, but faster)
+                    # specialized efficient form for the regular IΒ
+                    # (eq. 29 in Tishby 2000; equivalent to the
+                    # formula below, but faster)
                     cost = -px @ np.log(z)
                 else:
                     # generalized bottleneck
@@ -189,9 +191,7 @@ class EmpiricalBottleneck:
                                'info_y': mi_x1x2_c(py, pm, pym_c),
                                'entropy_m' : entropy(pm),
                                'cost': cost})
-        # among the restarts, select the result that gives the minimum
-        # value for the functional we're actually minimizing (eq 29 in
-        # Tishby et al 2000).
+        # among the restarts, select the result with minimum cost
         selected_candidate = min(candidates, key=lambda c: c['cost'])
         i_x = selected_candidate['info_x']
         i_y = selected_candidate['info_y']
@@ -281,6 +281,12 @@ class EmpiricalBottleneck:
         return ips, ifs, hms, bs, mixy, hx
 
 def elementwise_l(pm, px, pyx_c, pym_c, alpha, beta):
+    """Log-loss function, elementwise.
+
+    This is the generalization of l_β(x,m) in Strouse 2016 to the case
+    where 0<α≤1.
+
+    """
     return (np.log(pm[:,np.newaxis]) - beta * kl_divergence(pyx_c[:,np.newaxis,:], pym_c[:,:,np.newaxis]))/alpha
 
 def p_mx_c(pm, px, pyx_c, pym_c, alpha, beta):
@@ -299,10 +305,16 @@ def p_mx_c(pm, px, pyx_c, pym_c, alpha, beta):
     z -- normalizing factor
     """
     if alpha > 0:
+        # Generalized Information Bottleneck. Note that vanilla IB
+        # corresponds to the alpha=1 case.
         pmx_c = np.exp(elementwise_l(pm, px, pyx_c, pym_c, alpha, beta))
         z = pmx_c.sum(axis=0)
         pmx_c /= z # normalize
     elif alpha==0:
+        # Deterministic Information Bottleneck. As per Algorithm 2 in
+        # Strouse 2016, we compute the log-loss function for the
+        # vanilla IB (α=1), and for each value of x we set it to 1 for
+        # the value of t for which it's maximum, and zero otherwise.
         l = elementwise_l(pm, px, pyx_c, pym_c, 1, beta)
         pmx_c = np.zeros_like(l)
         pmx_c[np.argmax(l, axis=0), np.arange(l.shape[1])] = 1

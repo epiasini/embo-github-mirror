@@ -1,7 +1,7 @@
 # Copyright (C) 2020,2021 Eugenio Piasini, Alexandre Filipowicz,
 # Jonathan Levine.
 #
-# This file is part of embo.
+# This file is part of Embo.
 #
 # Embo is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
