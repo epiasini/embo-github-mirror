@@ -130,22 +130,22 @@ plt.plot(H_m,I_y)
 The `embo/examples` directory contains some Jupyter notebook that
 should exemplify most of the package's functionality.
 
-- [embo/examples/Basic-Example.ipynb](Basic-Example.ipynb):
-  a simple example of usage with synthetic data.
-- [embo/examples/Markov-Chains.ipynb](Markov-Chains.ipynb):
-  a more meaningful example where we compute the Information
-  Bottleneck between the past and the future of time series generated
-  from different Markov chains.
-- [embo/examples/Deterministic-Bottleneck.ipynb](Deterministic-Bottleneck.ipynb):
+- [Basic-Example.ipynb](embo/examples/Basic-Example.ipynb): a simple
+  example of usage with synthetic data.
+- [Markov-Chains.ipynb](embo/examples/Markov-Chains.ipynb): a more
+  meaningful example where we compute the Information Bottleneck
+  between the past and the future of time series generated from
+  different Markov chains.
+- [Deterministic-Bottleneck.ipynb](embo/examples/Deterministic-Bottleneck.ipynb):
   here we reproduce a key figure from the original Deterministic
   Bottleneck paper, and we explore the algorithm's behaviour as α
   changes from 0 to 1.
-- [embo/examples/Compare-embo-dit.ipynb](Compare-embo-dit.ipynb): here
-  we compare embo with [https://pypi.org/project/dit](dit)
-  [https://doi.org/10.21105/joss.00738](James et al 2018). We compare
-  the solutions found by the two packages on a set of simple IB
-  problems (including a problem taken from dit's documentation), and
-  we show that embo is orders of magnitude faster than dit.
+- [Compare-embo-dit.ipynb](embo/examples/Compare-embo-dit.ipynb): here
+  we compare embo with [dit](https://pypi.org/project/dit) [[James et
+  al 2018]](https://doi.org/10.21105/joss.00738). We compare the
+  solutions found by the two packages on a set of simple IB problems
+  (including a problem taken from dit's documentation), and we show
+  that embo is orders of magnitude faster than dit.
 
 ### Further details
 For more details, please consult the docstrings in
