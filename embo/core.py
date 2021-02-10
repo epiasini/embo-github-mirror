@@ -122,7 +122,7 @@ class EmpiricalBottleneck:
         return self.hx, self.hy
 
     @classmethod
-    def beta_iter(cls, a, b, px, py, pyx_c, pm_size, restarts, iterations, rtol=1e-3, atol=None):
+    def beta_iter(cls, a, b, px, py, pyx_c, pm_size, restarts, iterations, rtol=1e-3, atol=0):
         """Function to run BA algorithm for individual values of beta
 
         Arguments:
@@ -139,23 +139,41 @@ class EmpiricalBottleneck:
         Returns:
         list with i_x and i_y, which correspond to I(M:X) and I(M:Y) values for each value of beta
         """
-        if atol is None:
-            # setting atol>0 helps with underflow when 0<alpha<<1, but can default to zero otherwise
-            atol = 0 if a==0 or a==1 else 1e-20
         candidates = []
         for r in range(restarts):
 
-            # Initialize distribution for bottleneck variable
-            pm = np.random.rand(pm_size)+1
-            pm /= pm.sum()
-            pym_c = np.random.rand(py.size, pm.size)+1  # Starting point for the algorithm
-            pym_c /= pym_c.sum(axis=0)
-
+            # initialization
+            if pm_size==px.size and pm_size>0:
+                # by default pm_size will be the same as px.size. In
+                # this case we initialize similarly to Strouse and
+                # Schwab 2016: for x_j, most of the mass of the
+                # encoder p(m|x) is on m_j, while a smaller part of
+                # the mass is distributed randomly over the other
+                # values of m.
+                pmx_c = np.zeros((pm_size, px.size))
+                delta = 0.2 * np.random.rand(1,px.size)
+                pmx_c[0,:] = 0.75 - delta
+                pmx_c[1:,:] = np.random.rand(pm_size-1, px.size)+1
+                pmx_c[1:,:] = (0.25+delta)*pmx_c[1:,:]/(pmx_c[1:,:].sum(axis=0))
+                for kx in range(pmx_c.shape[1]):
+                    pmx_c[:,kx] = np.roll(pmx_c[:,kx], kx)
+                pm = p_m(pmx_c, px)
+                pym_c = p_ym_c(pm, px, pyx_c, pmx_c)
+            else:
+                # legacy initialization scheme
+                pm = np.random.rand(pm_size)+1
+                pm /= pm.sum()
+                pym_c = np.random.rand(py.size, pm.size)+1  # Starting point for the algorithm
+                pym_c /= pym_c.sum(axis=0)
+                    
+            
             # Iterate the BA algorithm
             for i in range(iterations):
                 pmx_c, z = p_mx_c(pm, px, pyx_c, pym_c, a, b)
                 pm = p_m(pmx_c,px)
+                pm, pmx_c, pym_c = drop_unused_dimensions(pm, pmx_c, pym_c)
                 pym_c = p_ym_c(pm, px, pyx_c, pmx_c)
+                pm, pmx_c, pym_c = drop_unused_dimensions(pm, pmx_c, pym_c)
                 # compute cost: H(M)-αH(M|X)-βI(M:Y)
                 if a==1:
                     # specialized efficient form for the regular IΒ (equivalent to the formula below, but faster)
@@ -181,7 +199,7 @@ class EmpiricalBottleneck:
         return [i_x, i_y, h_m, b]
 
     @classmethod
-    def IB(cls, px, py, pyx_c, alpha=1, minsize = False, maxbeta=5, numbeta=30, iterations=100, restarts=3, processes=1):
+    def IB(cls, px, py, pyx_c, alpha=1, minsize = False, maxbeta=5, minbeta=1e-2, numbeta=30, iterations=100, restarts=3, processes=1, ensure_monotonic_bound='auto', rtol=1e-3):
         """Compute an Information Bottleneck curve
 
         Arguments:
@@ -190,11 +208,14 @@ class EmpiricalBottleneck:
         pyx_c -- conditional probability of Y given X
         alpha -- generalized bottleneck parameter: alpha=1 is IB, alpha=0 is DIB
         minsize -- if True, maximum size of compression matches smallest codebook size between x and y
-        maxbeta -- the maximum value of beta to use to compute the curve. Minimum is 0.01.
+        maxbeta -- the maximum value of beta to use to compute the curve.
+        minbeta -- the minimum value of beta to use.
         numbeta -- the number of (equally-spaced) beta values to consider to compute the curve.
         iterations -- number of iterations to use to for the curve to converge for each value of beta
         restarts -- number of times the optimization procedure should be restarted (for each value of beta) from different random initial conditions.
         processes -- number of cpu threads to run in parallel (default = 1)
+        ensure_monotonic_bound -- one of 'entropy', 'information', 'auto' or False. This parameter can be used to ensure that the final bound is monotonic in the chosen plane. If 'information', monotonicity is encforced in the IB plane. If 'entropy', monotonicity is enforced in the DIB plane. If 'auto', monotonicity is enforced in the IB plane for alpha=1 and in the DIB plane for alpha==0, but not for intermediate values. If False, monotonicity is not enforced and the original beta sequence is preserved.
+        rtol -- relative tolerance parameter for convergence criterion.
 
         Returns:
         ips -- values of I(M:X) for each beta considered
@@ -208,11 +229,11 @@ class EmpiricalBottleneck:
         if minsize:
             pm_size = min(px.size,py.size)  # Get compression size - smallest size
         
-        bs = np.linspace(0.01, maxbeta, numbeta)  # value of beta
+        bs = np.linspace(minbeta, maxbeta, numbeta)  # value of beta
 
         # Parallel computing of compression for desired beta values
         pool = mp.Pool(processes=processes)
-        results = [pool.apply_async(cls.beta_iter, args=(alpha, b, px, py, pyx_c, pm_size, restarts, iterations,)) for b in bs]
+        results = [pool.apply_async(cls.beta_iter, args=(alpha, b, px, py, pyx_c, pm_size, restarts, iterations,rtol)) for b in bs]
         pool.close()
         results = [p.get() for p in results]
         ips = [x[0] for x in results]
@@ -231,20 +252,26 @@ class EmpiricalBottleneck:
         # IY) the information with respect to the previous value of
         # beta. This is to avoid confounds from cases where the AB
         # algorithm gets stuck in a local minimum.
-        if alpha > 0:
-            # If alpha > 0, we ensure monotonicity in the IB plane
-            ub, idxs = compute_upper_bound(ips, ifs)
-            ips = np.squeeze(ub[:, 0])
-            ifs = np.squeeze(ub[:, 1])
-            hms = np.array(hms)[idxs]
-            bs = np.array(bs)[idxs]
-        elif alpha==0:
-            # If alpha==0, we ensure monotonicity in the DIB plane
-            ub, idxs = compute_upper_bound(hms, ifs)
-            ips = np.squeeze(ub[:, 0])
-            hms = np.squeeze(ub[:, 1])
-            ifs = np.array(ifs)[idxs]
-            bs = np.array(bs)[idxs]
+        if ensure_monotonic_bound:
+            if ensure_monotonic_bound=='auto':
+                if alpha==1:
+                    # If alpha ==1 (vanilla IB), we ensure monotonicity in the IB plane
+                    ensure_monotonic_bound = 'information'
+                elif alpha==0:
+                    # If alpha==0, we ensure monotonicity in the DIB plane
+                    ensure_monotonic_bound = 'entropy'
+            if ensure_monotonic_bound=='information':
+                ub, idxs = compute_upper_bound(ips, ifs)
+                ips = np.squeeze(ub[:, 0])
+                ifs = np.squeeze(ub[:, 1])
+                hms = np.array(hms)[idxs]
+                bs = np.array(bs)[idxs]
+            elif ensure_monotonic_bound=='entropy':
+                ub, idxs = compute_upper_bound(hms, ifs)
+                hms = np.squeeze(ub[:, 0])
+                ifs = np.squeeze(ub[:, 1])
+                ips = np.array(ips)[idxs]
+                bs = np.array(bs)[idxs]
 
         # Return saturation point (mixy) and max horizontal axis (hx)
         mixy = mi_x1x2_c(py, px, pyx_c)
@@ -294,7 +321,6 @@ def p_ym_c(pm, px, pyx_c, pmx_c):
     """
     pym = pyx_c*px[np.newaxis,:] @ pmx_c.T
     pym_c = pym / pm[np.newaxis,:]
-    pym_c[pym==0] = 0
     return pym_c
 
 def p_m(pmx_c, px):
@@ -308,3 +334,21 @@ def p_m(pmx_c, px):
     pm - marginal distribution of compression p(M)
     """
     return pmx_c @ px
+
+def drop_unused_dimensions(pm, pmx_c, pym_c, eps=0):
+    """Remove bottleneck dimensions that are not in use anymore.
+
+    This is in general safe to do as once a dimension is excluded by
+    the algorithm, it is never brought back. It is necessary to use
+    this function particularly when using the generalized bottleneck,
+    where dimensions are discarded very aggressively, and if keeping
+    them we would need to put special safeguards in place to avoid
+    NaNs and infinities in the Dkl and when computing p(y|m).
+
+    """
+    unused_pm = pm<=eps
+    unused_pmx_c = np.all(pmx_c<=eps, axis=1)
+    unused_pym_c = np.all(pym_c<=eps, axis=0)
+    unused = np.any(np.vstack([unused_pm, unused_pmx_c.T, unused_pym_c]), axis=0)
+    in_use = ~unused
+    return pm[in_use], pmx_c[in_use,:], pym_c[:,in_use]
