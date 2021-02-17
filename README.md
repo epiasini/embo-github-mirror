@@ -76,11 +76,10 @@ class. In its constructor, `EmpiricalBottleneck` takes as arguments an
 array of observations for X and an (equally long) array of
 observations for Y, together with other optional parameters (see the
 docstring for details). In the most basic use case, users can call the
-`get_information_bottleneck` method of an `EmpiricalBottleneck`
-object, which will assume α=1 and return a set of β values and the
-optimal values of I(M:X), I(M:Y) and H(M) corresponding to those
-β. The optimal tradeoff can then be visualised by plotting I(M:Y) vs
-I(M:Y).
+`get_bottleneck` method of an `EmpiricalBottleneck` object, which will
+assume α=1 and return a set of β values and the optimal values of
+I(M:X), I(M:Y) and H(M) corresponding to those β. The optimal tradeoff
+can then be visualised by plotting I(M:Y) vs I(M:Y).
 
 For instance:
 
@@ -94,7 +93,7 @@ x = np.array([0,0,0,1,0,1,0,1,0,1])
 y = np.array([0,1,0,1,0,1,0,1,0,1])
 
 # compute the IB bound from the data (vanilla IB; Tishby et al 2001)
-I_x,I_y,H_m,β = EmpiricalBottleneck(x,y).get_empirical_bottleneck()
+I_x,I_y,H_m,β = EmpiricalBottleneck(x,y).get_bottleneck()
 
 # plot the IB bound
 plt.plot(I_x,I_y)
@@ -109,7 +108,7 @@ of each combination of states for X and Y.
 pxy = np.array([[0.1, 0.4],[0.35, 0.15]]),
 
 # compute IB
-I_x,I_y,H_m,β = EmpiricalBottleneck(pxy=pxy).get_empirical_bottleneck()
+I_x,I_y,H_m,β = EmpiricalBottleneck(pxy=pxy).get_bottleneck()
 
 # plot I(M:Y) vs I(M:X)
 plt.plot(I_x,I_y)
@@ -120,7 +119,7 @@ setting appropriately the parameter `alpha`:
 
 ``` python
 # compute Deterministic Information Bottleneck (Strouse 2016)
-I_x,I_y,H_m,β = EmpiricalBottleneck(pxy=pxy, alpha=0).get_empirical_bottleneck()
+I_x,I_y,H_m,β = EmpiricalBottleneck(pxy=pxy, alpha=0).get_bottleneck()
 
 # plot I(M:Y) vs H(M)
 plt.plot(H_m,I_y)
@@ -130,16 +129,15 @@ plt.plot(H_m,I_y)
 The `embo/examples` directory contains some Jupyter notebook that
 should exemplify most of the package's functionality.
 
-- [Basic-Example.ipynb](embo/examples/Basic-Example.ipynb): a simple
-  example of usage with synthetic data.
-- [Markov-Chains.ipynb](embo/examples/Markov-Chains.ipynb): a more
-  meaningful example where we compute the Information Bottleneck
-  between the past and the future of time series generated from
-  different Markov chains.
+- [Basic-Example.ipynb](embo/examples/Basic-Example.ipynb): basics;
+  how to compute and plot an IB bound.
+- [Markov-Chains.ipynb](embo/examples/Markov-Chains.ipynb): using embo
+  for *past-future bottleneck* type analyses on data from Markov
+  chains.
 - [Deterministic-Bottleneck.ipynb](embo/examples/Deterministic-Bottleneck.ipynb):
-  here we reproduce a key figure from the original Deterministic
-  Bottleneck paper, and we explore the algorithm's behaviour as α
-  changes from 0 to 1.
+  Deterministic and Generalized Information Bottleneck. Here we
+  reproduce a key figure from the Deterministic Bottleneck paper, and
+  we explore the algorithm's behaviour as α changes from 0 to 1.
 - [Compare-embo-dit.ipynb](embo/examples/Compare-embo-dit.ipynb): here
   we compare embo with [dit](https://pypi.org/project/dit) [[James et
   al 2018]](https://doi.org/10.21105/joss.00738). We compare the

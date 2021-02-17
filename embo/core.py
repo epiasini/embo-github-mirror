@@ -23,7 +23,7 @@ from .utils import p_joint, mi_x1x2_c, compute_upper_bound, kl_divergence, entro
 
 np.seterr(divide='ignore', invalid='ignore')
 
-class EmpiricalBottleneck:
+class InformationBottleneck:
 
     def __init__(self, x=None, y=None, alpha=1, window_size_x=1, window_size_y=1, pxy=None, **kwargs):
         """ Information Bottleneck analysis for an empirical dataset (x,y) or a joint probability mass function pxy.
@@ -59,6 +59,7 @@ class EmpiricalBottleneck:
             raise ValueError("Eiter pxy or x and y should be specified.")
         elif len(x)==0 or len(y)==0:
             raise ValueError("If pxy is not specified, x and y can't be empty.")
+        self.get_empirical_bottleneck = self.get_bottleneck
 
     def compute_IB_curve(self):
         """ Compute the IB curve for the joint empirical observations for X and Y. """
@@ -77,10 +78,10 @@ class EmpiricalBottleneck:
 
         # set a flag we will use to call this function automatically when needed
         self.results_ready = True
-
-    def get_empirical_bottleneck(self, return_entropies=False):
+    
+    def get_bottleneck(self, return_entropies=False):
         """Return array of I(M:X) and I(M:Y) for array of different values of beta
-         mixy should correspond to the saturation point
+
          Returns:
             i_x -- values of I(M:X) for each value of beta
             i_y -- values of I(M:Y) for each value of beta
