@@ -25,7 +25,7 @@ from scipy.stats import entropy as spentropy
 
 def test_origin(x, y, alpha=1):
     """Check that the IB bound starts at (0,0) for small beta"""
-    eb = embo.EmpiricalBottleneck(x, y, alpha=alpha)
+    eb = embo.InformationBottleneck(x, y, alpha=alpha)
     i_x = eb.get_ix()
     i_y = eb.get_iy()
     np.testing.assert_allclose((i_x[0], i_y[0]), (0,0), rtol=1e-7, atol=1e-6)
@@ -41,7 +41,7 @@ def test_asymptote(x, y, maxbeta=30, alpha=1):
     internal facility for this.
 
     """
-    eb = embo.EmpiricalBottleneck(x, y, maxbeta=maxbeta, alpha=alpha)
+    eb = embo.InformationBottleneck(x, y, maxbeta=maxbeta, alpha=alpha)
     i_y = eb.get_iy()
     mi = eb.get_saturation_point()
     np.testing.assert_allclose(i_y[-1], mi, rtol=1e-7, atol=1e-6)
@@ -124,8 +124,8 @@ class TestRandomDistribution(unittest.TestCase):
                         for each in range(self.N):
                             #pxy = self.rng.dirichlet(np.full(X*Y,1/2)).reshape(X,Y)
                             pxy = self.sample_pxy(X,Y)
-                            eb = embo.EmpiricalBottleneck(pxy=pxy, maxbeta=20, numbeta=5, alpha=alpha, restarts=10, rtol=1e-5, iterations=1000, ensure_monotonic_bound=False)
-                            ix, iy, hm, _, ixy, hx, hy = eb.get_empirical_bottleneck(return_entropies=True)
+                            eb = embo.InformationBottleneck(pxy=pxy, maxbeta=20, numbeta=5, alpha=alpha, restarts=10, rtol=1e-5, iterations=1000, ensure_monotonic_bound=False)
+                            ix, iy, hm, _, ixy, hx, hy = eb.get_bottleneck(return_entropies=True)
                             self.assertTrue(
                                 # note the relatively large
                                 # tolerances: they help ignoring
@@ -192,7 +192,7 @@ class TestBinarySequence(unittest.TestCase):
                  with self.assertRaises(
                         ValueError,
                         msg="If pxy is not specified, x and y can't be empty."):
-                     eb = embo.EmpiricalBottleneck(self.empty, self.empty, alpha=alpha)
+                     eb = embo.InformationBottleneck(self.empty, self.empty, alpha=alpha)
 
     def test_array_with_nan(self):
         """Check that an error is raised in presence of NaNs"""
@@ -201,7 +201,7 @@ class TestBinarySequence(unittest.TestCase):
                 with self.assertRaises(
                         ValueError,
                         msg="The observation data contains NaNs or Infs."):
-                    embo.EmpiricalBottleneck(self.x_with_nan, self.y, alpha=alpha)
+                    embo.InformationBottleneck(self.x_with_nan, self.y, alpha=alpha)
 
     def test_array_with_inf(self):
         """Check that an error is raised in presence of infinities"""
@@ -210,7 +210,7 @@ class TestBinarySequence(unittest.TestCase):
                 with self.assertRaises(
                         ValueError,
                         msg="The observation data contains NaNs or Infs."):
-                    embo.EmpiricalBottleneck(self.x_with_inf, self.y, alpha=alpha)
+                    embo.InformationBottleneck(self.x_with_inf, self.y, alpha=alpha)
 
 
 class TestUpperBound(unittest.TestCase):
