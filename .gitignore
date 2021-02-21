@@ -6,6 +6,7 @@ embo.egg-info/
 build
 dist
 embo/examples/.ipynb_checkpoints
+embo/examples/*.pdf
 .DS_Store
 /.ipynb_checkpoints/
 /.tox/
