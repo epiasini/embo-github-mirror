@@ -1,4 +1,4 @@
-include COPYING
+include LICENSE
 include CHANGELOG.md
 include embo/VERSION
 include embo/examples/*.ipynb
