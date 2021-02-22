@@ -9,7 +9,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Added support for Generalized Information Bottleneck (GIB;
   introduced by [Strouse and Schwab
-  2017](https://arxiv.org/abs/1604.00268)). This includes the
+  2016](https://arxiv.org/abs/1604.00268)). This includes the
   "vanilla" IB and the Deterministic IB as special cases.
 - Improved performance by vectorizing some key sections of the code.
 - Added support for computing IB/DIB/GIB directly from a table giving
