@@ -28,6 +28,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added tests for GIB (actually just took most previous tests and made
   them to run over a range of IB types, from basic IB to DIB passing
   by some intermediate ones)
+- Added tests to check that our internal implementation of KL
+  divergence and entropy give exactly the same results as the
+  corresponding functions from SciPy (they should, as we use the same
+  low-level functions from `scipy.special`).
 - Added tests on randomly-generated empirical data, sampled from a
   fixed probability distribution. This is better than what we had
   before because it makes it easier to catch corner cases.
@@ -54,6 +58,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   initialization method is still used when the dimensionality of M is
   lower than that of X.
 - Improved handling of corrupted input (NaNs, Infs, empty arrays)
+- Switched to [tox](https://tox.readthedocs.io/en/latest/index.html)
+  for managing unit tests, as using pure setuptools via `python
+  setup.py test` is now discouraged.
 - Removed usage of dtypes such as `np.int`, which were generating
   numpy deprecation warnings in NumPy 1.20.
 - Removed some somewhat misleading/unnecessary references to
