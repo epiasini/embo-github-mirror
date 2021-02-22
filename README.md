@@ -71,12 +71,12 @@ given a certain amount of information about X.
 ### Using `embo`
 Embo can solve the information bottleneck problem for discrete random
 variables starting from a set of joint empirical observations. The
-main point of entry to the package is the `EmpiricalBottleneck`
-class. In its constructor, `EmpiricalBottleneck` takes as arguments an
+main point of entry to the package is the `InformationBottleneck`
+class. In its constructor, `InformationBottleneck` takes as arguments an
 array of observations for X and an (equally long) array of
 observations for Y, together with other optional parameters (see the
 docstring for details). In the most basic use case, users can call the
-`get_bottleneck` method of an `EmpiricalBottleneck` object, which will
+`get_bottleneck` method of an `InformationBottleneck` object, which will
 assume α=1 and return a set of β values and the optimal values of
 I(M:X), I(M:Y) and H(M) corresponding to those β. The optimal tradeoff
 can then be visualised by plotting I(M:Y) vs I(M:Y).
@@ -86,14 +86,14 @@ For instance:
 ``` python
 import numpy as np
 from matplotlib import pyplot as plt
-from embo import EmpiricalBottleneck
+from embo import InformationBottleneck
 
 # data sequences
 x = np.array([0,0,0,1,0,1,0,1,0,1])
 y = np.array([0,1,0,1,0,1,0,1,0,1])
 
 # compute the IB bound from the data (vanilla IB; Tishby et al 2001)
-I_x,I_y,H_m,β = EmpiricalBottleneck(x,y).get_bottleneck()
+I_x,I_y,H_m,β = InformationBottleneck(x,y).get_bottleneck()
 
 # plot the IB bound
 plt.plot(I_x,I_y)
@@ -108,7 +108,7 @@ of each combination of states for X and Y.
 pxy = np.array([[0.1, 0.4],[0.35, 0.15]]),
 
 # compute IB
-I_x,I_y,H_m,β = EmpiricalBottleneck(pxy=pxy).get_bottleneck()
+I_x,I_y,H_m,β = InformationBottleneck(pxy=pxy).get_bottleneck()
 
 # plot I(M:Y) vs I(M:X)
 plt.plot(I_x,I_y)
@@ -119,7 +119,7 @@ setting appropriately the parameter `alpha`:
 
 ``` python
 # compute Deterministic Information Bottleneck (Strouse 2016)
-I_x,I_y,H_m,β = EmpiricalBottleneck(pxy=pxy, alpha=0).get_bottleneck()
+I_x,I_y,H_m,β = InformationBottleneck(pxy=pxy, alpha=0).get_bottleneck()
 
 # plot I(M:Y) vs H(M)
 plt.plot(H_m,I_y)
@@ -147,7 +147,11 @@ should exemplify most of the package's functionality.
 
 ### Further details
 For more details, please consult the docstrings in
-`EmpiricalBottleneck`.
+`InformationBottleneck`.
+
+## Changelog
+See the [CHANGELOG.md](CHANGELOG.md) file for a list of changes from
+older versions.
 
 ## Authors
 `embo` is maintained by Eugenio Piasini, Alexandre Filipowicz and

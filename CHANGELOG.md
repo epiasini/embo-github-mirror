@@ -40,6 +40,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Add license notices to files containing the core code.
 - Added changelog file.
 ### Changed
+- Renamed `EmpiricalBottleneck` class to `InformationBottleneck`, and
+  `get_empirical_bottleneck` method to `get_bottleneck`.
 - Made a small fix to the convergence criterion of the algorithm. This
   is nicer from a motivation standpoint (we monitor the loss function
   instead of the candidate pmf for changes), and also matches what is
