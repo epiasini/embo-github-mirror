@@ -156,3 +156,6 @@ older versions.
 ## Authors
 `embo` is maintained by Eugenio Piasini, Alexandre Filipowicz and
 Jonathan Levine.
+
+## Citing
+Piasini, E., Filipowicz, A.L.S., Levine, J. and Gold, J.I., 2021. Embo: a Python package for empirical data analysis using the Information Bottleneck. *Journal of Open Research Software*, 9(1), p.10. DOI: http://doi.org/10.5334/jors.322
